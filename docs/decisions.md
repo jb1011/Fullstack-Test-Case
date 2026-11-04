@@ -181,3 +181,7 @@ The exercise asks for an item page, so each row links to one. The loader waits f
 ## History is a chart
 
 The history was already loading behind the hero, so I drew it with Recharts instead of leaving the table. APR opens on the last seven days. TVL, thirty days and the full series are the other views. The change since yesterday is the newest point minus the point from a day earlier.
+
+## Hover loads the opportunity
+
+The link prefetch downloads the page code. It does not run the client loader, so the detail and the history were still fetched when the row opened. On hover and on focus I load both into the browser cache. I kept the link prefetch, because the code still has to arrive. A second pass while those entries are fresh does not call the API again.

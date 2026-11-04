@@ -1,7 +1,9 @@
 import { Box, Button, Flex, Skeleton, Text, chakra } from "@chakra-ui/react";
 import type { OpportunitySort, OpportunitySummary, SortOrder } from "@merkl/shared";
+import { useQueryClient } from "@tanstack/react-query";
 import { Link as RouterLink } from "react-router";
 
+import { opportunityQueries } from "../api/queries";
 import { formatAprNumber, formatTvl } from "../lib/format";
 import { RoundIcon } from "./round-icon";
 
@@ -61,6 +63,14 @@ function TokenStack({ tokens }: { tokens: OpportunitySummary["tokens"] }) {
 }
 
 const skeletonRows = ["a", "b", "c", "d", "e", "f", "g", "h"] as const;
+
+function useWarmOpportunity() {
+  const queryClient = useQueryClient();
+  return (id: string) => {
+    void queryClient.query(opportunityQueries.detail(id)).catch(() => undefined);
+    void queryClient.query(opportunityQueries.history(id)).catch(() => undefined);
+  };
+}
 
 export function OpportunityTableSkeleton() {
   return (
@@ -128,6 +138,7 @@ export function OpportunityTable({
   order: SortOrder;
   onSort: (sort: OpportunitySort) => void;
 }) {
+  const warm = useWarmOpportunity();
   return (
     <Box minW="980px">
       <Box
@@ -167,6 +178,12 @@ export function OpportunityTable({
             <RouteLink
               to={`/opportunities/${item.id}`}
               prefetch="intent"
+              onMouseEnter={() => {
+                warm(item.id);
+              }}
+              onFocus={() => {
+                warm(item.id);
+              }}
               display="grid"
               gridTemplateColumns={columns}
               minH="72px"

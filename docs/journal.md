@@ -217,3 +217,9 @@ Tested: seven days shows the two newest points, thirty days and the full series 
 On the first load the server started history and the browser started it again. Only a finished query was in the page, so a request that was still running never arrived and the browser cache was empty. That request is now sent as a promise that streams in. The loader still returns before history finishes, so the hero does not wait for the chart.
 
 Tested: a query that is still running is in the dehydrated state as a promise, the browser renders it without fetching, the loader still returns before history finishes, and a fresh detail and history are not fetched again.
+
+## 8.5 Load an opportunity when its row is hovered
+
+The link prefetch only downloaded the page code. A page with a client loader does not prefetch its data that way, so opening a row still called the API. Hovering or focusing a row now loads the detail and the history into the browser cache. Opening that row then makes no request, and a second hover while the entries are fresh does not call again.
+
+Tested: hover loads one row, focus loads another, and reading either query again does not fetch.

@@ -112,7 +112,7 @@ Rejected alternatives:
 
 ### Focus: making it feel instant
 
-The time box is past, so this stays small. A filter selects immediately. Skeletons show only when that list is not already fresh. A row prefetches its item page on hover. There is no motion and no keepPreviousData. One Playwright test still checks that the first load does not call the API from the browser and that going back is served from the cache.
+The time box is past, so this stays small. A filter selects immediately. Skeletons show only when that list is not already fresh. A row loads the detail and the history into the browser cache on hover and on focus, so opening it makes no request. There is no motion and no keepPreviousData. One Playwright test still checks that the first load does not call the API from the browser and that going back is served from the cache.
 
 ## Testing
 
