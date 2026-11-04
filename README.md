@@ -91,10 +91,10 @@ TanStack Query keeps data per user, so going back to a list or reopening an item
 
 React Router loaders and TanStack Query both want to own the data. I use the pattern TanStack recommends for SSR frameworks:
 
-1. **Server: one `QueryClient` per request**, created in a React Router middleware and passed to loaders through `context`. Sharing one across requests would leak one user's data to another. Loaders `await queryClient.query`, and the cache is dehydrated into the HTML after every loader on that request has finished.
+1. **Server: one `QueryClient` per request**, created in a React Router middleware and passed to loaders through `context`. Sharing one across requests would leak one user's data to another. Loaders `await queryClient.query`, and the cache is dehydrated into the HTML after every loader on that request has finished. A query that is still running is included as a promise, so the browser continues it instead of calling the API again.
 2. **Client: one `QueryClient` for the whole session**, with a `HydrationBoundary`. Components only call `useQuery` or `useSuspenseQuery`, exactly like a client rendered app.
 3. **`clientLoader` with `queryClient.query`**: without it, React Router would call the server loader on every client navigation and bypass the TanStack cache. The query factories already set `staleTime`, so a fresh entry is not fetched again.
-4. **Streaming secondary data**: on the item page the opportunity is awaited (critical for first paint and SEO), while the history is prefetched without awaiting and the chart streams in behind a Suspense skeleton.
+4. **Streaming secondary data**: on the item page the opportunity is awaited (critical for first paint and SEO), while the history is prefetched without awaiting and the chart streams in behind a Suspense skeleton. If that request is still running, its promise is what streams, and the browser does not start its own.
 5. **`queryOptions` factories in one file**, shared by loaders, client loaders and components, so query keys can never drift apart.
 6. **`staleTime` above zero**, otherwise the client would refetch right after hydration and waste the server fetch. The times match the API cache.
 

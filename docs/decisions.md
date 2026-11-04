@@ -142,6 +142,8 @@ A list or a detail stays fresh in the browser for 60 seconds, history for 5 minu
 
 Loaders on one request run at the same time, so the root loader cannot snapshot the cache while another loader is still fetching. The dehydrated state is read when React Router serializes the page, which is after every loader has finished. I didn't dehydrate at the end of the root loader function, because that runs too early.
 
+A query that is still running is part of that snapshot, as a promise that streams to the browser. Only finished queries used to be sent, so history was missing on the first load and the browser called the API again. I didn't make the loader wait for history, because the hero should paint before the chart.
+
 ## The browser calls the API directly
 
 The server render and the browser both call the API at its own URL. I allow any origin, because the responses are public and the request sends no cookies. I didn't proxy the API through the web app, because a proxy on `/opportunities` would collide with the item page, and a proxy that exists only in dev would be missing when the production server runs.

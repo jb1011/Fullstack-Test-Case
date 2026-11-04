@@ -211,3 +211,9 @@ Tested: the page shows the current APR, the pills, the time left, the deposit li
 The history table is now a chart. APR is the first view, and TVL is the other. Seven days is the opening range, with thirty days and the full series beside it. The left side is a scale, percent for APR and compact dollars for TVL. The figure under the current APR is how much that rate moved since the point from a day earlier.
 
 Tested: seven days shows the two newest points, thirty days and the full series add the older ones, switching to TVL changes the chart, the scale uses percent or compact dollars, and the change since yesterday is shown.
+
+## 8.4 Stream a history request that is still running
+
+On the first load the server started history and the browser started it again. Only a finished query was in the page, so a request that was still running never arrived and the browser cache was empty. That request is now sent as a promise that streams in. The loader still returns before history finishes, so the hero does not wait for the chart.
+
+Tested: a query that is still running is in the dehydrated state as a promise, the browser renders it without fetching, the loader still returns before history finishes, and a fresh detail and history are not fetched again.

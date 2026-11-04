@@ -1,4 +1,9 @@
-import { dehydrate, QueryClient, type DehydratedState } from "@tanstack/react-query";
+import {
+  dehydrate,
+  defaultShouldDehydrateQuery,
+  QueryClient,
+  type DehydratedState,
+} from "@tanstack/react-query";
 import { createContext, type MiddlewareFunction, type RouterContextProvider } from "react-router";
 
 /**
@@ -43,11 +48,16 @@ export async function queryClientClientMiddleware(
 /**
  * Sibling loaders run at the same time as the root loader. The state is read
  * when the response is serialized, which is after those loaders have finished.
+ * A query that is still running is included as its promise, so the browser
+ * continues that request instead of starting another one.
  */
 export function dehydratedLoaderData(queryClient: QueryClient) {
   return {
     get dehydratedState(): DehydratedState {
-      return dehydrate(queryClient);
+      return dehydrate(queryClient, {
+        shouldDehydrateQuery: (query) =>
+          defaultShouldDehydrateQuery(query) || query.state.status === "pending",
+      });
     },
   };
 }
