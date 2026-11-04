@@ -19,6 +19,11 @@ const rawParams = (search: string) => {
 export const queryFromSearch = (search: string) =>
   opportunitiesQuerySchema.parse(rawParams(search));
 
+export const pendingQuery = (search: string) => {
+  const parsed = opportunitiesQuerySchema.safeParse(rawParams(search));
+  return parsed.success ? parsed.data : null;
+};
+
 export const queryFromRequest = (request: Request) => queryFromSearch(new URL(request.url).search);
 
 export const withFilter = (

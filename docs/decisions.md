@@ -157,3 +157,21 @@ When nothing matches, Merkl's total TVL is null. I read that as zero, so the lis
 ## An empty list is not an error
 
 When nothing matches, the page stays up and says so, with the filters still there. I didn't send that through the error boundary, because an empty filter is a normal result and the controls have to stay usable.
+
+## The explorer layout stays in Chakra
+
+The list design was written for Tailwind, Radix and a motion library. I drew it with Chakra, which the app already uses. I didn't add Tailwind, because two styling systems would fight. I didn't show a rewards total or a change since yesterday, because I would have had to invent them. I didn't make a row a link, because the item page is not built yet.
+
+## The next filter shows before the list
+
+I mark the clicked segment immediately. If that list is still fresh in the cache I show it at once. If it is not, I put skeletons in the rows until the loader finishes. I didn't leave the previous rows up under a filter I have not loaded, because they would look like they already belong to it.
+
+The cost: switching back after the minute is up shows skeletons again, because that copy is no longer fresh.
+
+## The time box is over
+
+The three hours are past, so I am cutting the polish. I will not add motion, prefetch on hover, or keepPreviousData. The list already selects a filter at once and shows skeletons only when that list is not fresh.
+
+I am keeping the item page, because the exercise asks for one. After it I will add one Playwright test: the first load does not call the API from the browser, and going back is served from the cache.
+
+The cost: there is no animation from the list to the item, and a stale list shows skeletons instead of the previous rows.

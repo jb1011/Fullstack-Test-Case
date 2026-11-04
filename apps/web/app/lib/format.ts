@@ -1,4 +1,5 @@
 const percent = new Intl.NumberFormat("en", { maximumFractionDigits: 2 });
+const count = new Intl.NumberFormat("en");
 const dollars = new Intl.NumberFormat("en", {
   style: "currency",
   currency: "USD",
@@ -6,6 +7,10 @@ const dollars = new Intl.NumberFormat("en", {
   maximumFractionDigits: 1,
 });
 
-export const formatApr = (value: number) => `${percent.format(value)}%`;
+export const formatCount = (value: number) => count.format(value);
+
+export const formatAprNumber = (value: number) => percent.format(value);
+
+export const formatApr = (value: number) => `${formatAprNumber(value)}%`;
 
 export const formatTvl = (value: number) => dollars.format(value);

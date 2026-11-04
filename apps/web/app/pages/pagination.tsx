@@ -1,4 +1,4 @@
-import { Button, Stack, Text } from "@chakra-ui/react";
+import { Button, Flex, Text } from "@chakra-ui/react";
 
 export function Pagination({
   page,
@@ -12,28 +12,58 @@ export function Pagination({
   onPage: (page: number) => void;
 }) {
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
+  const from = (page - 1) * pageSize + 1;
+  const to = Math.min(page * pageSize, total);
+  const range =
+    from > total
+      ? `0 of ${String(total)}`
+      : `${String(from)}\u2013${String(to)} of ${String(total)}`;
 
   return (
-    <Stack as="nav" aria-label="Pagination" direction="row" gap="3" align="center">
-      <Button
-        disabled={page <= 1}
-        onClick={() => {
-          onPage(page - 1);
-        }}
-      >
-        Previous
-      </Button>
-      <Text>
-        Page {page} of {pageCount}
+    <Flex
+      as="nav"
+      aria-label="Pagination"
+      h="52px"
+      px="5"
+      align="center"
+      justify="space-between"
+      borderTopWidth="1px"
+      borderColor="line"
+    >
+      <Text color="muted" fontFamily="mono" fontSize="13px" fontVariantNumeric="tabular-nums">
+        {range}
       </Text>
-      <Button
-        disabled={page >= pageCount}
-        onClick={() => {
-          onPage(page + 1);
-        }}
-      >
-        Next
-      </Button>
-    </Stack>
+      <Flex gap="4" align="center">
+        <Button
+          unstyled
+          type="button"
+          aria-label="Prev"
+          disabled={page <= 1}
+          onClick={() => {
+            onPage(page - 1);
+          }}
+          color="muted"
+          fontSize="13px"
+          _disabled={{ opacity: 0.4 }}
+        >
+          ← Prev
+        </Button>
+        <Button
+          unstyled
+          type="button"
+          aria-label="Next"
+          disabled={page >= pageCount}
+          onClick={() => {
+            onPage(page + 1);
+          }}
+          color="ink"
+          fontSize="13px"
+          fontWeight="500"
+          _disabled={{ opacity: 0.4 }}
+        >
+          Next →
+        </Button>
+      </Flex>
+    </Flex>
   );
 }

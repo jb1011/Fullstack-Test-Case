@@ -109,15 +109,12 @@ Rejected alternatives:
 
 - **Filter state lives in the URL**, parsed with the shared Zod schema: SSR renders the right results, links are shareable and the back button works.
 - **Filters**: chain, protocol, action, status, minimum and maximum TVL, minimum APR, search, sort, pagination.
-- **List page**: name, chain, protocol, token icons, APR, TVL, status, and a header with the total TVL matching the filters (`/v4/opportunities/aggregate/tvl`).
+- **List page**: a table of name, action, TVL, daily rewards and APR. Above it, the total TVL for the current filters (from the TVL aggregate) and how many opportunities match.
 - **Item page**: details, tokens, and an APR and TVL chart.
 
 ### Focus: making it feel instant
 
-- Previous results stay on screen while new filters load (`keepPreviousData`), instead of flashing a loader.
-- Hovering a row prefetches its item page.
-- Skeletons instead of spinners.
-- Animated transition from the list to the item page.
+The time box is past, so this stays small. A filter selects immediately. Skeletons show only when that list is not already fresh. There is no motion, no prefetch on hover, and no keepPreviousData. After the item page, one Playwright test checks that the first load does not call the API from the browser and that going back is served from the cache.
 
 ## Testing
 
@@ -138,7 +135,7 @@ Every commit ships with unit tests:
 6. **API, cache** (done): one TTL per entry, deduplication, LRU via `lru-cache`, `Cache-Control`, tested with an injected clock.
 7. **Web, SSR foundation and list page**: QueryClient middleware, hydration, filters in the URL.
 8. **Web, item page**: details, streamed chart, `clientLoader`.
-9. **Polish and end to end tests**: prefetching, skeletons, transitions, Playwright.
+9. **One Playwright test**: the first load does not call the API from the browser, and going back is served from the cache. Motion, hover prefetch and keepPreviousData are cut.
 
 ## Documentation
 

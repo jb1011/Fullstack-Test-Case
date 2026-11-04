@@ -181,3 +181,9 @@ Tested: the header shows the total from the list, and next keeps the chain filte
 A list that matches nothing now says so, and the filters stay so the query can be changed. A failed load becomes a short message, because the browser otherwise receives a plain error and loses the reason. The error boundary shows that message and a way to try again.
 
 Tested: an empty list shows the message and hides the pages, a page past the end says that page is empty, an invalid address says the filters are not valid, and a loader error shows the boundary.
+
+## 7.8 Restyle the list
+
+The list now looks like the explorer: a light page, Geist, two totals, a filter bar and a table. The design notes used Tailwind, so I put the same colours and sizes into the Chakra theme. Sort sits in the column headers. Maximum TVL and minimum APR still work from the address. Active filters stay in the bar, with no second row of tags, so the list does not jump when the first filter is chosen. A segment such as Lend or Soon selects immediately. The rows become skeletons only when that list is not already fresh in the cache. I left out a rewards total and a TVL change, because those numbers are not in the API. A row does not open an item page yet, and hovering it does not show View. The time box is past, so after the item page I will only add one Playwright test and skip the rest of the polish.
+
+Tested: a chain filter still writes the URL and loads that list, reset clears the address, the totals and the next page still work, the empty and error states still show, Lend is pressed while a new list is loading, and a cached list shows without skeletons.

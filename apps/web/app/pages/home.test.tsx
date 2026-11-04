@@ -1,11 +1,11 @@
-import { ChakraProvider, defaultSystem } from "@chakra-ui/react";
+import { ChakraProvider } from "@chakra-ui/react";
 import type { OpportunityList } from "@merkl/shared";
 import createEmotionServer from "@emotion/server/create-instance";
 import { CacheProvider } from "@emotion/react";
 import { hydrate, QueryClientProvider } from "@tanstack/react-query";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { Suspense } from "react";
 import { renderToString } from "react-dom/server";
 import {
@@ -21,6 +21,7 @@ import { apiBaseUrl } from "../api/client";
 import { filters, list, summary } from "../api/fixture";
 import { opportunityQueries } from "../api/queries";
 import { createEmotionCache } from "../lib/emotion";
+import { system } from "../theme";
 import {
   createQueryClient,
   dehydratedLoaderData,
@@ -30,6 +31,18 @@ import {
 } from "../lib/queryClient";
 import Home, { clientLoader, ErrorBoundary, loader } from "./home";
 import { queryFromSearch } from "./search";
+
+globalThis.ResizeObserver = class {
+  observe() {
+    return undefined;
+  }
+  unobserve() {
+    return undefined;
+  }
+  disconnect() {
+    return undefined;
+  }
+};
 
 const server = setupServer();
 
@@ -68,7 +81,7 @@ const shell = (path = "/", current: OpportunityList = list) => {
   const tree = (
     <CacheProvider value={cache}>
       <QueryClientProvider client={client}>
-        <ChakraProvider value={defaultSystem}>
+        <ChakraProvider value={system}>
           <Suspense fallback={null}>
             <RouterProvider router={router} />
           </Suspense>
@@ -118,10 +131,137 @@ describe("Home", () => {
 
     const { tree, router } = shell("/?page=2");
     render(tree);
-    fireEvent.change(screen.getByLabelText("Chain"), { target: { value: "1" } });
+    fireEvent.click(screen.getByRole("button", { name: "Chains" }));
+    const ethereum = await screen.findByRole<HTMLInputElement>("checkbox", { name: "Ethereum" });
+    await act(async () => {
+      ethereum.click();
+      await Promise.resolve();
+    });
 
     expect(router.state.location.search).toBe("?chain=1");
     expect(await screen.findByText("Supply ETH")).toBeTruthy();
+  });
+
+  it("selects a segment before the list arrives", async () => {
+    let release = () => undefined;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const lendList = {
+      ...list,
+      items: [{ ...summary, id: "lend", name: "Lend only" }],
+    };
+    const client = seededClient();
+    const router = createMemoryRouter(
+      [
+        {
+          path: "/",
+          Component: Home,
+          loader: async ({ request }) => {
+            if (new URL(request.url).search === "?action=LEND") {
+              await gate;
+              client.setQueryData(
+                opportunityQueries.list(queryFromSearch("action=LEND")).queryKey,
+                lendList,
+              );
+            }
+            return null;
+          },
+        },
+      ],
+      { initialEntries: ["/"] },
+    );
+    const cache = createEmotionCache();
+
+    render(
+      <CacheProvider value={cache}>
+        <QueryClientProvider client={client}>
+          <ChakraProvider value={system}>
+            <Suspense fallback={null}>
+              <RouterProvider router={router} />
+            </Suspense>
+          </ChakraProvider>
+        </QueryClientProvider>
+      </CacheProvider>,
+    );
+
+    expect(await screen.findByRole("button", { name: "All" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Lend" }));
+
+    expect(await screen.findByRole("status", { name: "Loading opportunities" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Lend" }).getAttribute("aria-pressed")).toBe("true");
+    expect(screen.queryByText("Supply USDC")).toBeNull();
+
+    await act(async () => {
+      release();
+      await gate;
+    });
+
+    expect(await screen.findByText("Lend only")).toBeTruthy();
+    expect(screen.queryByRole("status", { name: "Loading opportunities" })).toBeNull();
+  });
+
+  it("shows a cached list without skeletons", async () => {
+    const waits: (() => void)[] = [];
+    let started = false;
+    const lendList = {
+      ...list,
+      items: [{ ...summary, id: "lend", name: "Lend only" }],
+    };
+    const client = seededClient("action=LEND", lendList);
+    const router = createMemoryRouter(
+      [
+        {
+          path: "/",
+          Component: Home,
+          loader: () => {
+            if (!started) {
+              started = true;
+              return null;
+            }
+            return new Promise<null>((resolve) => {
+              waits.push(() => {
+                resolve(null);
+              });
+            });
+          },
+        },
+      ],
+      { initialEntries: ["/"] },
+    );
+    const cache = createEmotionCache();
+
+    render(
+      <CacheProvider value={cache}>
+        <QueryClientProvider client={client}>
+          <ChakraProvider value={system}>
+            <Suspense fallback={null}>
+              <RouterProvider router={router} />
+            </Suspense>
+          </ChakraProvider>
+        </QueryClientProvider>
+      </CacheProvider>,
+    );
+
+    expect(await screen.findByText("Supply USDC")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Lend" }));
+
+    expect(await screen.findByText("Lend only")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Lend" }).getAttribute("aria-pressed")).toBe("true");
+    expect(screen.queryByRole("status", { name: "Loading opportunities" })).toBeNull();
+    expect(screen.queryByText("Supply USDC")).toBeNull();
+
+    await act(async () => {
+      waits.shift()?.();
+      await Promise.resolve();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "All" }));
+
+    expect(await screen.findByText("Supply USDC")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "All" }).getAttribute("aria-pressed")).toBe("true");
+    expect(screen.queryByRole("status", { name: "Loading opportunities" })).toBeNull();
+    expect(screen.queryByText("Lend only")).toBeNull();
   });
 
   it("clears every filter", () => {
@@ -131,7 +271,7 @@ describe("Home", () => {
     fireEvent.click(screen.getByRole("button", { name: "Reset" }));
 
     expect(router.state.location.search).toBe("");
-    expect(screen.getByLabelText<HTMLSelectElement>("Chain").value).toBe("");
+    expect(screen.queryByRole("button", { name: "Reset" })).toBeNull();
     expect(screen.getByLabelText<HTMLInputElement>("Search").value).toBe("");
   });
 
@@ -152,8 +292,9 @@ describe("Home", () => {
     const { tree, router } = shell("/?chain=1", first);
     render(tree);
 
-    expect(screen.getByText("Total TVL $2.0M")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Previous" }).hasAttribute("disabled")).toBe(true);
+    expect(screen.getByText("Total value locked")).toBeTruthy();
+    expect(screen.getByText("$2.0M")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Prev" }).hasAttribute("disabled")).toBe(true);
 
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
 
@@ -196,7 +337,7 @@ describe("Home", () => {
     );
 
     render(
-      <ChakraProvider value={defaultSystem}>
+      <ChakraProvider value={system}>
         <RouterProvider router={router} />
       </ChakraProvider>,
     );

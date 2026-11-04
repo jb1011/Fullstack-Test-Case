@@ -1,20 +1,29 @@
-import { Heading, Stack, Text } from "@chakra-ui/react";
-import { serializeOpportunitiesQuery } from "@merkl/shared";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { Box, Flex, Grid, Heading, Text } from "@chakra-ui/react";
+import {
+  serializeOpportunitiesQuery,
+  type OpportunitiesQuery,
+  type OpportunityList,
+  type OpportunitySort,
+} from "@merkl/shared";
+import { useQueryClient, useSuspenseQuery, type QueryClient } from "@tanstack/react-query";
 import {
   data,
+  useNavigation,
   useSearchParams,
   type ClientLoaderFunctionArgs,
   type LoaderFunctionArgs,
 } from "react-router";
 
 import { ApiError } from "../api/client";
-import { opportunityQueries } from "../api/queries";
-import { formatApr, formatTvl } from "../lib/format";
+import { LIST_STALE_MS, opportunityQueries } from "../api/queries";
+import { FilterBar } from "../components/filter-bar";
+import { KpiCard } from "../components/kpi";
+import { Nav } from "../components/nav";
+import { OpportunityTable, OpportunityTableSkeleton } from "../components/opportunity-table";
+import { formatCount, formatTvl } from "../lib/format";
 import { requireQueryClient } from "../lib/queryClient";
-import { OpportunityFilters } from "./filters";
 import { Pagination } from "./pagination";
-import { queryFromRequest, queryFromSearch, withFilter, withPage } from "./search";
+import { pendingQuery, queryFromRequest, queryFromSearch, withFilter, withPage } from "./search";
 
 const loadPage = async ({ request, context }: LoaderFunctionArgs) => {
   try {
@@ -49,79 +58,116 @@ export function clientLoader(args: ClientLoaderFunctionArgs) {
 
 export { ListErrorBoundary as ErrorBoundary } from "./error";
 
+function freshList(client: QueryClient, query: OpportunitiesQuery) {
+  const key = opportunityQueries.list(query).queryKey;
+  const state = client.getQueryState(key);
+  if (state?.status !== "success" || state.isInvalidated) return undefined;
+  if (Date.now() - state.dataUpdatedAt >= LIST_STALE_MS) return undefined;
+  return client.getQueryData<OpportunityList>(key);
+}
+
 export default function Home() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigation = useNavigation();
+  const queryClient = useQueryClient();
   const query = queryFromSearch(searchParams.toString());
+  const pending =
+    navigation.state === "loading" && navigation.location.pathname === "/"
+      ? pendingQuery(navigation.location.search)
+      : null;
+  const cached = pending ? freshList(queryClient, pending) : undefined;
+  const loadingList = pending !== null && cached === undefined;
+  const displayed = pending ?? query;
   const { data } = useSuspenseQuery(opportunityQueries.list(query));
+  const shown = cached ?? data;
   const { data: filterOptions } = useSuspenseQuery(opportunityQueries.filters());
+  const onlyStatus = displayed.status.length === 1 ? displayed.status[0] : undefined;
+  const empty =
+    shown.items.length === 0
+      ? shown.total === 0
+        ? "No opportunities match these filters."
+        : "No opportunities on this page."
+      : null;
 
   return (
-    <Stack gap="6" padding="6">
-      <Stack gap="1">
-        <Heading as="h1" size="xl">
+    <Box minH="100vh">
+      <Nav />
+      <Box maxW="1240px" mx="auto" px="12" pt="11" pb="16">
+        <Heading
+          as="h1"
+          fontSize="44px"
+          fontWeight="650"
+          letterSpacing="-1.6px"
+          lineHeight="1"
+          color="ink"
+        >
           Opportunities
         </Heading>
-        <Text color="fg.muted">Total TVL {formatTvl(data.totalTvl)}</Text>
-      </Stack>
-      <OpportunityFilters
-        query={query}
-        options={filterOptions}
-        onChange={(patch) => {
-          const next = serializeOpportunitiesQuery(withFilter(query, patch));
-          setSearchParams(new URLSearchParams(next));
-        }}
-        onReset={() => {
-          setSearchParams(new URLSearchParams());
-        }}
-      />
-      {data.items.length === 0 ? (
-        <Text role="status">
-          {data.total === 0
-            ? "No opportunities match these filters."
-            : "No opportunities on this page."}
+        <Text mt="3" color="muted">
+          Live incentives across DeFi, refreshed every minute.
         </Text>
-      ) : (
-        <Stack gap="4" role="list">
-          {data.items.map((item) => (
-            <Stack key={item.id} role="listitem" gap="1">
-              <Stack direction="row" gap="2" align="center">
-                {item.tokens.map((token) =>
-                  token.icon ? (
-                    <img
-                      key={token.address}
-                      src={token.icon}
-                      alt={token.symbol}
-                      width={16}
-                      height={16}
-                    />
-                  ) : (
-                    <Text key={token.address} fontSize="sm">
-                      {token.symbol}
-                    </Text>
-                  ),
-                )}
-                <Text fontWeight="medium">{item.name}</Text>
-              </Stack>
-              <Text color="fg.muted" fontSize="sm">
-                {item.chain.name}
-                {item.protocol ? ` · ${item.protocol.name}` : ""}
-                {` · ${item.status} · ${formatApr(item.apr)} · ${formatTvl(item.tvl)}`}
-              </Text>
-            </Stack>
-          ))}
-        </Stack>
-      )}
-      {data.total > 0 ? (
-        <Pagination
-          page={query.page}
-          pageSize={query.pageSize}
-          total={data.total}
-          onPage={(page) => {
-            const next = serializeOpportunitiesQuery(withPage(query, page));
+        <Grid mt="8" gap="3" templateColumns={{ base: "1fr", md: "repeat(2, minmax(0, 380px))" }}>
+          <KpiCard
+            label="Total value locked"
+            value={formatTvl(shown.totalTvl)}
+            loading={loadingList}
+          />
+          <KpiCard
+            label={onlyStatus === "LIVE" ? "Live opportunities" : "Opportunities"}
+            value={formatCount(shown.total)}
+            loading={loadingList}
+          />
+        </Grid>
+        <FilterBar
+          query={displayed}
+          options={filterOptions}
+          onChange={(patch) => {
+            const next = serializeOpportunitiesQuery(withFilter(displayed, patch));
             setSearchParams(new URLSearchParams(next));
           }}
+          onReset={() => {
+            setSearchParams(new URLSearchParams());
+          }}
         />
-      ) : null}
-    </Stack>
+        <Box bg="surface" borderWidth="1px" borderColor="line" rounded="card" overflow="hidden">
+          {loadingList ? (
+            <Box overflowX="auto">
+              <OpportunityTableSkeleton />
+            </Box>
+          ) : empty ? (
+            <Flex align="center" justify="center" minH="240px" px="6">
+              <Text role="status" color="muted" textAlign="center">
+                {empty}
+              </Text>
+            </Flex>
+          ) : (
+            <Box overflowX="auto">
+              <OpportunityTable
+                items={shown.items}
+                sort={displayed.sort}
+                order={displayed.order}
+                onSort={(sort: OpportunitySort) => {
+                  const order =
+                    displayed.sort === sort && displayed.order === "desc" ? "asc" : "desc";
+                  const next = serializeOpportunitiesQuery(withFilter(displayed, { sort, order }));
+                  setSearchParams(new URLSearchParams(next));
+                }}
+              />
+            </Box>
+          )}
+          {!loadingList && shown.total > 0 ? (
+            <Pagination
+              page={displayed.page}
+              pageSize={displayed.pageSize}
+              total={shown.total}
+              onPage={(page) => {
+                const next = serializeOpportunitiesQuery(withPage(displayed, page));
+                setSearchParams(new URLSearchParams(next));
+              }}
+            />
+          ) : null}
+        </Box>
+      </Box>
+    </Box>
   );
 }

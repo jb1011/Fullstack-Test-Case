@@ -1,4 +1,4 @@
-import { ChakraProvider, defaultSystem } from "@chakra-ui/react";
+import { ChakraProvider } from "@chakra-ui/react";
 import { HydrationBoundary } from "@tanstack/react-query";
 import { Suspense, type ReactNode } from "react";
 import {
@@ -11,15 +11,21 @@ import {
   type LoaderFunctionArgs,
 } from "react-router";
 
+import { fontFaces, fontLinks } from "./fonts";
 import {
   dehydratedLoaderData,
   queryClientClientMiddleware,
   queryClientMiddleware,
   requireQueryClient,
 } from "./lib/queryClient";
+import { system } from "./theme";
 
 export const middleware = [queryClientMiddleware];
 export const clientMiddleware = [queryClientClientMiddleware];
+
+export function links() {
+  return fontLinks;
+}
 
 export function loader({ context }: LoaderFunctionArgs) {
   return dehydratedLoaderData(requireQueryClient(context));
@@ -31,13 +37,14 @@ export function Layout({ children }: { children: ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Merkl</title>
+        <title>Merkl Explorer</title>
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <style dangerouslySetInnerHTML={{ __html: fontFaces }} />
         <Meta />
         <Links />
       </head>
       <body>
-        <ChakraProvider value={defaultSystem}>{children}</ChakraProvider>
+        <ChakraProvider value={system}>{children}</ChakraProvider>
         <ScrollRestoration />
         <Scripts />
       </body>
