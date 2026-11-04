@@ -83,3 +83,11 @@ Tested: realistic examples parse, an opportunity without a protocol is accepted,
 Plain functions that turn what Merkl sends into what my API returns. They clean up Merkl's quirks in one place: empty icons and missing fields become `null`, campaign dates go from unix seconds to ISO, history goes from newest first in seconds to oldest first in milliseconds. The filters list sorts chains and protocols by name and hides the `INVALID` action.
 
 Tested: the real fixtures are mapped and every result is validated against the shared DTO schemas, so the mapper and the contract can't disagree. Unknown actions, malformed dates and missing fields are covered too.
+
+## 5.1 Add app factory, env config, logger, health route and error handler
+
+The API now runs. `createApp(deps)` builds the Express app from what it's given instead of creating things itself, so tests can pass in a silent logger now and a fake Merkl later. `index.ts` is the only file that reads the environment, starts listening and closes the server on Ctrl+C. Env variables are checked with Zod at startup and all have defaults, so `.env` is optional. Logs come from pino, pretty in dev and JSON elsewhere.
+
+Every error leaves as a problem body (RFC 7807, the same format Merkl uses): Merkl not found becomes 404, Merkl timing out 504, any other Merkl failure 502, and anything unexpected a bare 500 that's logged but never shows its message.
+
+Tested: Supertest calls the health route, an unknown route, and a route throwing each kind of error. MSW now lets local requests through so Supertest can reach the app, and I checked that a request to the real Merkl still fails. I also started the server and hit it with curl.

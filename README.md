@@ -147,13 +147,15 @@ Every commit ships with unit tests:
 
 ## Getting started
 
-Prerequisites: Node 22 (see `.nvmrc`) and npm 10.
+Prerequisites: Node 22.9 or later (see `.nvmrc`) and npm 10.
 
 ```bash
 nvm use
 npm install
 npm run dev
 ```
+
+The API listens on `http://localhost:4000`. Every setting has a default, so no `.env` is needed. To override one, copy `apps/api/.env.example` to `apps/api/.env`.
 
 | Command                | What it does                                |
 | ---------------------- | ------------------------------------------- |

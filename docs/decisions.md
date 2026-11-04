@@ -82,6 +82,10 @@ The query schema and Merkl's schemas still infer their types. The query schema t
 
 If Merkl starts sending an action or status I don't know, that opportunity is skipped from the list instead of failing the whole page. The detail mapper returns `null` for it, so the route can answer 404.
 
+## Errors as problem details
+
+Every error has the same shape (RFC 7807: `type`, `title`, `status`, `detail`), so the web app has one thing to handle. Merkl failures become 502 or 504 because the problem is upstream, not in the request, and 404 stays 404. Merkl's own error messages and unexpected errors are logged but never sent, since they can leak internals.
+
 ## Faking Merkl with Mock Service Worker
 
 The client uses the real `fetch`, and MSW intercepts it in tests. That tests the actual URLs, headers and error handling, not a mock I wrote myself. Any request without a handler fails the test, so nothing can reach the real Merkl by accident.
