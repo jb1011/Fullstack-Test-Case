@@ -2,7 +2,7 @@ import { ChakraProvider } from "@chakra-ui/react";
 import { hydrate, QueryClientProvider } from "@tanstack/react-query";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
-import { act, cleanup, render, screen, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { Suspense } from "react";
 import { CacheProvider } from "@emotion/react";
 import {
@@ -18,7 +18,7 @@ import { apiBaseUrl } from "../api/client";
 import { detail, history } from "../api/fixture";
 import { opportunityQueries } from "../api/queries";
 import { createEmotionCache } from "../lib/emotion";
-import { formatApr, formatAprNumber, formatEndsIn, formatTvl } from "../lib/format";
+import { formatAprNumber, formatEndsIn, formatTvl } from "../lib/format";
 import {
   createQueryClient,
   dehydratedLoaderData,
@@ -28,6 +28,18 @@ import {
 } from "../lib/queryClient";
 import { system } from "../theme";
 import Opportunity, { clientLoader, ErrorBoundary, loader } from "./opportunity";
+
+globalThis.ResizeObserver = class {
+  observe() {
+    return undefined;
+  }
+  unobserve() {
+    return undefined;
+  }
+  disconnect() {
+    return undefined;
+  }
+};
 
 const server = setupServer();
 
@@ -49,14 +61,21 @@ const pageDetail = {
   endsAt: "2099-01-01T00:00:00.000Z",
 };
 
+const day = 86_400_000;
+const latest = 1_700_086_400_000;
+
 const pageHistory = {
   apr: [
-    { timestamp: 1_700_000_000_000, value: 4 },
-    { timestamp: 1_700_086_400_000, value: 6 },
+    { timestamp: latest - 40 * day, value: 1 },
+    { timestamp: latest - 20 * day, value: 3 },
+    { timestamp: latest - day, value: 4 },
+    { timestamp: latest, value: 6 },
   ],
   tvl: [
-    { timestamp: 1_700_000_000_000, value: 800 },
-    { timestamp: 1_700_086_400_000, value: 1200 },
+    { timestamp: latest - 40 * day, value: 100 },
+    { timestamp: latest - 20 * day, value: 400 },
+    { timestamp: latest - day, value: 800 },
+    { timestamp: latest, value: 1200 },
   ],
 };
 
@@ -93,7 +112,7 @@ const renderPage = (current = pageDetail, points = pageHistory) => {
 };
 
 describe("Opportunity", () => {
-  it("renders the hero and the newest history first", () => {
+  it("renders the hero and charts the recent APR", () => {
     renderPage();
 
     expect(screen.getByRole("heading", { level: 1, name: "Supply USDC" })).toBeTruthy();
@@ -113,18 +132,17 @@ describe("Opportunity", () => {
     expect(screen.getByRole("link", { name: "Deposit on Aave" }).getAttribute("href")).toBe(
       pageDetail.depositUrl,
     );
+    expect(screen.getByText("▲ 2 pts today")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "APR" }).getAttribute("aria-pressed")).toBe("true");
+    expect(screen.getByRole("button", { name: "7D" }).getAttribute("aria-pressed")).toBe("true");
+    expect(screen.getByRole("img", { name: "APR history, 2 points" })).toBeTruthy();
 
-    const cells = within(screen.getByRole("table", { name: "History" }))
-      .getAllByRole("cell")
-      .map((cell) => cell.textContent);
-    expect(cells).toEqual([
-      "Nov 15, 2023",
-      formatApr(6),
-      formatTvl(1200),
-      "Nov 14, 2023",
-      formatApr(4),
-      formatTvl(800),
-    ]);
+    fireEvent.click(screen.getByRole("button", { name: "30D" }));
+    expect(screen.getByRole("img", { name: "APR history, 3 points" })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "All" }));
+    fireEvent.click(screen.getByRole("button", { name: "TVL" }));
+    expect(screen.getByRole("img", { name: "TVL history, 4 points" })).toBeTruthy();
   });
 
   it("shows the hero while history is still loading", async () => {
@@ -165,7 +183,7 @@ describe("Opportunity", () => {
       await gate;
     });
 
-    expect(await screen.findByText("Nov 14, 2023")).toBeTruthy();
+    expect(await screen.findByRole("img", { name: "APR history, 1 point" })).toBeTruthy();
     expect(screen.queryByRole("status", { name: "Loading history" })).toBeNull();
   });
 

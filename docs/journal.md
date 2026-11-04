@@ -205,3 +205,9 @@ Tested: the page renders the hero and the newest history first, the hero stays u
 The opportunity page now follows the explorer detail. The name sits beside the current APR, with the chain, protocol, action and status as pills. TVL, daily rewards and the time left until the campaign ends sit under that. The history table stays on the left, and the deposit link and tokens sit on the right. I left out a campaign count, earn steps and a second link, because the API does not send them.
 
 Tested: the page shows the current APR, the pills, the time left, the deposit link and the tokens, and the history table is unchanged.
+
+## 8.3 Chart the APR and TVL history
+
+The history table is now a chart. APR is the first view, and TVL is the other. Seven days is the opening range, with thirty days and the full series beside it. The left side is a scale, percent for APR and compact dollars for TVL. The figure under the current APR is how much that rate moved since the point from a day earlier.
+
+Tested: seven days shows the two newest points, thirty days and the full series add the older ones, switching to TVL changes the chart, the scale uses percent or compact dollars, and the change since yesterday is shown.

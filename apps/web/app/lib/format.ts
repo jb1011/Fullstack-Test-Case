@@ -15,6 +15,9 @@ export const formatApr = (value: number) => `${formatAprNumber(value)}%`;
 
 export const formatTvl = (value: number) => dollars.format(value);
 
+export const formatScale = (series: "apr" | "tvl", value: number) =>
+  series === "apr" ? formatApr(value) : formatTvl(value);
+
 const DAY_MS = 86_400_000;
 
 export const formatEndsIn = (endsAt: string, now: number) => {

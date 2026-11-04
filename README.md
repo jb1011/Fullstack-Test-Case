@@ -19,7 +19,7 @@ I chose **opportunities**: it is the core resource of Merkl, and the Merkl API s
 | -------- | --------------------------------------------------------------------------------- |
 | Monorepo | npm workspaces: `apps/api`, `apps/web`, `packages/shared`                         |
 | API      | Node, Express 5, TypeScript, Zod, pino                                            |
-| Web      | React Router v8 (framework mode, SSR), TanStack Query v5, Chakra UI               |
+| Web      | React Router v8 (framework mode, SSR), TanStack Query v5, Chakra UI, Recharts     |
 | Shared   | Zod schemas and inferred types, consumed as TypeScript source (no build step)     |
 | Tooling  | strict TypeScript, ESLint (flat config, typescript-eslint, react-hooks), Prettier |
 | Tests    | Vitest, Supertest, MSW, Testing Library, Playwright (end to end, last)            |
@@ -94,7 +94,7 @@ React Router loaders and TanStack Query both want to own the data. I use the pat
 1. **Server: one `QueryClient` per request**, created in a React Router middleware and passed to loaders through `context`. Sharing one across requests would leak one user's data to another. Loaders `await queryClient.query`, and the cache is dehydrated into the HTML after every loader on that request has finished.
 2. **Client: one `QueryClient` for the whole session**, with a `HydrationBoundary`. Components only call `useQuery` or `useSuspenseQuery`, exactly like a client rendered app.
 3. **`clientLoader` with `queryClient.query`**: without it, React Router would call the server loader on every client navigation and bypass the TanStack cache. The query factories already set `staleTime`, so a fresh entry is not fetched again.
-4. **Streaming secondary data**: on the item page the opportunity is awaited (critical for first paint and SEO), while the history is prefetched without awaiting and the latest points stream in behind a Suspense skeleton.
+4. **Streaming secondary data**: on the item page the opportunity is awaited (critical for first paint and SEO), while the history is prefetched without awaiting and the chart streams in behind a Suspense skeleton.
 5. **`queryOptions` factories in one file**, shared by loaders, client loaders and components, so query keys can never drift apart.
 6. **`staleTime` above zero**, otherwise the client would refetch right after hydration and waste the server fetch. The times match the API cache.
 
@@ -108,7 +108,7 @@ Rejected alternatives:
 - **Filter state lives in the URL**, parsed with the shared Zod schema: SSR renders the right results, links are shareable and the back button works.
 - **Filters**: chain, protocol, action, status, minimum and maximum TVL, minimum APR, search, sort, pagination.
 - **List page**: a table of name, action, TVL, daily rewards and APR. Above it, the total TVL for the current filters (from the TVL aggregate) and how many opportunities match.
-- **Item page**: breadcrumb, name, current APR, chain, protocol, action and status, TVL, daily rewards, time left, description, a deposit link when the opportunity has one, tokens, and a table of the latest APR and TVL points. The chart comes next.
+- **Item page**: breadcrumb, name, current APR, chain, protocol, action and status, TVL, daily rewards, time left, description, a deposit link when the opportunity has one, tokens, and an APR and TVL chart with a scale on the left. The chart opens on the last seven days. The change since yesterday sits under the current APR.
 
 ### Focus: making it feel instant
 
@@ -132,7 +132,7 @@ Every commit ships with unit tests:
 5. **API, routes** (done): a working API with validation and errors, tested with Supertest.
 6. **API, cache** (done): one TTL per entry, deduplication, LRU via `lru-cache`, `Cache-Control`, tested with an injected clock.
 7. **Web, SSR foundation and list page** (done): QueryClient middleware, hydration, filters in the URL.
-8. **Web, item page**: the detail is awaited, history is prefetched, each row links to the page, and a missing id is a 404. The page is laid out like the explorer detail. The APR and TVL chart is next.
+8. **Web, item page** (done): the detail is awaited, history is prefetched, each row links to the page, and a missing id is a 404. The page is laid out like the explorer detail, with an APR and TVL chart.
 9. **One Playwright test**: the first load does not call the API from the browser, and going back is served from the cache. Motion and keepPreviousData are cut.
 
 ## Documentation

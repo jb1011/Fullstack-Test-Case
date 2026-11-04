@@ -175,3 +175,7 @@ I am keeping the item page, because the exercise asks for one. After it I will a
 ## The item page shows recent history in a table
 
 The exercise asks for an item page, so each row links to one. The loader waits for the opportunity and starts the history without waiting, so the hero can paint while those points are still on the way. Hovering a row prefetches that page. I did not draw a chart, because a working page matters more than a half finished one, and the recent APR and TVL already come from the history.
+
+## History is a chart
+
+The history was already loading behind the hero, so I drew it with Recharts instead of leaving the table. APR opens on the last seven days. TVL, thirty days and the full series are the other views. The change since yesterday is the newest point minus the point from a day earlier.
