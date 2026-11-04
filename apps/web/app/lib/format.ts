@@ -4,6 +4,8 @@ const dollars = new Intl.NumberFormat("en", {
   style: "currency",
   currency: "USD",
   notation: "compact",
+  // Pinned on both ends: Node 22 and Node 24 ship different ICU defaults for compact currency.
+  minimumFractionDigits: 1,
   maximumFractionDigits: 1,
 });
 
