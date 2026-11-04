@@ -175,3 +175,9 @@ Tested: a filtered URL is requested once and reused after hydration, choosing a 
 The header shows the total TVL of everything matching the filters, which is already part of the list response, so it does not take another request. Previous and next write the page into the address and leave the other filters alone. The first and last pages stop there.
 
 Tested: the header shows the total from the list, and next keeps the chain filter while loading page 2.
+
+## 7.7 Add an error boundary and an empty state
+
+A list that matches nothing now says so, and the filters stay so the query can be changed. A failed load becomes a short message, because the browser otherwise receives a plain error and loses the reason. The error boundary shows that message and a way to try again.
+
+Tested: an empty list shows the message and hides the pages, a page past the end says that page is empty, an invalid address says the filters are not valid, and a loader error shows the boundary.

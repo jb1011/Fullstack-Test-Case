@@ -104,8 +104,6 @@ The cost: an old value can sit in memory until the size limit drops it.
 
 I cache the DTO a route returns, not each Merkl call on its own. A list is the page, the count and the total TVL together, so they stay one snapshot and expire together. The key is the normalized query, which already sorts values and drops defaults, so the same filters share an entry whatever order they arrived in.
 
-The cost: a new opportunity can take up to 60 seconds to show, and the store keeps 500 entries.
-
 ## Cache-Control matches the server TTL
 
 A successful response is `public`, because nothing in it depends on who asked, and `max-age` is the same number of seconds the server keeps that answer. I didn't add a stale window on the header, for the same reason the server doesn't have one. Health and errors are `no-store`, so a liveness check or a 502 is never replayed from a browser cache.
@@ -155,3 +153,7 @@ The filter controls read and write the page URL, and the loader parses that URL 
 ## An empty filter has a total of zero
 
 When nothing matches, Merkl's total TVL is null. I read that as zero, so the list comes back empty instead of as an error. I didn't reject the response, because an empty filter is a normal page.
+
+## An empty list is not an error
+
+When nothing matches, the page stays up and says so, with the filters still there. I didn't send that through the error boundary, because an empty filter is a normal result and the controls have to stay usable.

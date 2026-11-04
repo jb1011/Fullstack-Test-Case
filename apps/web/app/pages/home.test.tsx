@@ -6,9 +6,11 @@ import { hydrate, QueryClientProvider } from "@tanstack/react-query";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { Suspense } from "react";
 import { renderToString } from "react-dom/server";
 import {
   createMemoryRouter,
+  data,
   RouterContextProvider,
   RouterProvider,
   type ClientLoaderFunctionArgs,
@@ -26,7 +28,7 @@ import {
   queryClientMiddleware,
   requireQueryClient,
 } from "../lib/queryClient";
-import Home, { clientLoader, loader } from "./home";
+import Home, { clientLoader, ErrorBoundary, loader } from "./home";
 import { queryFromSearch } from "./search";
 
 const server = setupServer();
@@ -67,7 +69,9 @@ const shell = (path = "/", current: OpportunityList = list) => {
     <CacheProvider value={cache}>
       <QueryClientProvider client={client}>
         <ChakraProvider value={defaultSystem}>
-          <RouterProvider router={router} />
+          <Suspense fallback={null}>
+            <RouterProvider router={router} />
+          </Suspense>
         </ChakraProvider>
       </QueryClientProvider>
     </CacheProvider>
@@ -117,7 +121,7 @@ describe("Home", () => {
     fireEvent.change(screen.getByLabelText("Chain"), { target: { value: "1" } });
 
     expect(router.state.location.search).toBe("?chain=1");
-    expect((await screen.findByRole("listitem")).textContent).toContain("Supply ETH");
+    expect(await screen.findByText("Supply ETH")).toBeTruthy();
   });
 
   it("clears every filter", () => {
@@ -154,7 +158,69 @@ describe("Home", () => {
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
 
     expect(router.state.location.search).toBe("?chain=1&page=2");
-    expect((await screen.findByRole("listitem")).textContent).toContain("Page two");
+    expect(await screen.findByText("Page two")).toBeTruthy();
+  });
+
+  it("says when nothing matches and hides the pages", () => {
+    const empty = { ...list, items: [], total: 0, totalTvl: 0 };
+    render(shell("/", empty).tree);
+
+    expect(screen.getByRole("status").textContent).toBe("No opportunities match these filters.");
+    expect(screen.queryByRole("listitem")).toBeNull();
+    expect(screen.queryByRole("navigation", { name: "Pagination" })).toBeNull();
+    expect(screen.getByLabelText("Search")).toBeTruthy();
+  });
+
+  it("says when the requested page is empty", () => {
+    const past = { ...list, items: [], total: 40, totalTvl: 1000, page: 3 };
+    render(shell("/?page=3", past).tree);
+
+    expect(screen.getByRole("status").textContent).toBe("No opportunities on this page.");
+    expect(screen.getByRole("navigation", { name: "Pagination" })).toBeTruthy();
+  });
+
+  it("shows the error boundary when the loader fails", async () => {
+    const router = createMemoryRouter(
+      [
+        {
+          path: "/",
+          Component: Home,
+          ErrorBoundary,
+          loader: () => {
+            // eslint-disable-next-line @typescript-eslint/only-throw-error -- React Router route error
+            throw data("Merkl returned an unexpected response", { status: 502 });
+          },
+        },
+      ],
+      { initialEntries: ["/"] },
+    );
+
+    render(
+      <ChakraProvider value={defaultSystem}>
+        <RouterProvider router={router} />
+      </ChakraProvider>,
+    );
+
+    expect(await screen.findByRole("heading", { name: "Something went wrong" })).toBeTruthy();
+    expect(screen.getByText("Merkl returned an unexpected response")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Try again" })).toBeTruthy();
+  });
+
+  it("turns an invalid address into a readable error", async () => {
+    const href = "http://localhost/?minTvl=10&maxTvl=1";
+    const context = new RouterContextProvider();
+    await queryClientMiddleware(requestArgs(context, href), async () => {
+      try {
+        await loader(requestArgs(context, href));
+        throw new Error("The loader should have failed");
+      } catch (error) {
+        expect(error).toMatchObject({
+          data: "These filters are not valid.",
+          init: { status: 400 },
+        });
+      }
+      return new Response();
+    });
   });
 });
 

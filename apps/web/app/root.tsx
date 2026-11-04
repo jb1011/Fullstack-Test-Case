@@ -1,6 +1,6 @@
 import { ChakraProvider, defaultSystem } from "@chakra-ui/react";
 import { HydrationBoundary } from "@tanstack/react-query";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import {
   Links,
   Meta,
@@ -49,7 +49,9 @@ export default function App() {
   const { dehydratedState } = useLoaderData<typeof loader>();
   return (
     <HydrationBoundary state={dehydratedState}>
-      <Outlet />
+      <Suspense fallback={null}>
+        <Outlet />
+      </Suspense>
     </HydrationBoundary>
   );
 }
