@@ -1,0 +1,187 @@
+{
+  "chainId": 1,
+  "type": "ERC20LOGPROCESSOR",
+  "identifier": "0x6dC58a0FdfC8D694e571DC59B9A52EEEa780E6bf",
+  "name": "Supply to Sentora RLUSD Main V2 vault on Morpho on Ethereum",
+  "description": "Earn rewards by supplying to the Sentora RLUSD Main V2 vault on Morpho on Ethereum",
+  "howToSteps": ["Lend assets on Morpho.", "Rewards accumulate automatically."],
+  "status": "LIVE",
+  "action": "LEND",
+  "tvl": 431533047.44705623,
+  "apr": 2.7963308981128128,
+  "totalApr": 5.443060900315746,
+  "maxApr": 0.034,
+  "dailyRewards": 33060.525866657146,
+  "maxDailyRewards": 33060.525866657146,
+  "tags": ["sentora"],
+  "liveCampaigns": 1,
+  "earliestCampaignStart": "1793300400",
+  "latestCampaignStart": "1793300400",
+  "earliestCampaignEnd": "1793905200",
+  "latestCampaignEnd": "1793905200",
+  "id": "2433802672589613459",
+  "nativeApr": 2.646730002202934,
+  "depositUrl": "https://app.morpho.org/ethereum/vault/0x6dC58a0FdfC8D694e571DC59B9A52EEEa780E6bf",
+  "explorerAddress": "0x6dC58a0FdfC8D694e571DC59B9A52EEEa780E6bf",
+  "lastCampaignCreatedAt": 1793186775,
+  "tokens": [
+    {
+      "id": "12124343669875024301",
+      "name": "Sentora RLUSD Main",
+      "chainId": 1,
+      "address": "0x6dC58a0FdfC8D694e571DC59B9A52EEEa780E6bf",
+      "decimals": 18,
+      "symbol": "senRLUSDv2",
+      "icon": "",
+      "verified": false,
+      "isNative": false,
+      "isTest": false,
+      "type": "TOKEN",
+      "price": 1.0159585985922388,
+      "updatedAt": 1793786215,
+      "priceSource": "Price Source 0x6dC58a0FdfC8D694e571DC59B9A52EEEa780E6bf",
+      "displaySymbol": "senRLUSDv2"
+    },
+    {
+      "id": "6340883670170224181",
+      "name": "RLUSD",
+      "chainId": 1,
+      "address": "0x8292Bb45bf1Ee4d140127049757C2E0fF06317eD",
+      "decimals": 18,
+      "symbol": "RLUSD",
+      "icon": "https://storage.googleapis.com/merkl-static-assets/tokens/RLUSD.svg",
+      "verified": true,
+      "isNative": false,
+      "isTest": false,
+      "type": "TOKEN",
+      "price": 0.9998672747394898,
+      "updatedAt": 1793786194,
+      "priceSource": "Price Source RLUSD",
+      "displaySymbol": "RLUSD"
+    }
+  ],
+  "chain": {
+    "id": 1,
+    "name": "Ethereum",
+    "icon": "https://storage.googleapis.com/merkl-static-assets/chains/1.svg",
+    "liveCampaigns": 164,
+    "endOfDisputePeriod": 1793786400,
+    "explorers": [
+      {
+        "id": "13265570907942326370",
+        "type": "ETHERSCAN",
+        "url": "https://etherscan.io",
+        "chainId": 1
+      }
+    ],
+    "lastClaimsOnchainFetchTimestamp": "1793784587"
+  },
+  "protocol": {
+    "id": "morpho",
+    "name": "Morpho",
+    "icon": "https://storage.googleapis.com/merkl-static-assets/protocols/morpho.svg",
+    "tags": ["LENDING", "arbitrum-drip"],
+    "description": "Open infrastructure for onchain loans",
+    "url": "https://morpho.org/",
+    "banner": null,
+    "opportunityBannerLight": null,
+    "opportunityBannerDark": null,
+    "trustData": {
+      "tvl": 11044597585.876266,
+      "slug": "morpho-blue",
+      "hacks": [],
+      "audits": "2",
+      "github": [],
+      "twitter": "Morpho",
+      "category": "Lending",
+      "listedAt": 1705261273,
+      "syncedAt": 1793765037,
+      "audit_note": null,
+      "audit_links": [
+        "https://github.com/morpho-org/morpho-blue/blob/main/audits/2023-11-13-morpho-blue-cantina-managed-review.pdf"
+      ],
+      "parentProtocol": "parent#morpho"
+    },
+    "dailyRewards": 0,
+    "numberOfLiveCampaigns": 0,
+    "opportunityLiveTags": []
+  },
+  "activePrograms": [],
+  "depositUrls": [],
+  "aprRecord": {
+    "cumulated": 2.7963308981128128,
+    "timestamp": "1793750400",
+    "breakdowns": [
+      {
+        "distributionType": "MAX_REWARD_VALUE_PER_LIQUIDITY_VALUE",
+        "identifier": "0x5c5688f390c93ced02c762a0972205eb74ec624add08269204927de9a613026a",
+        "type": "CAMPAIGN",
+        "value": 2.7963308981128128,
+        "timestamp": "1793750400"
+      }
+    ]
+  },
+  "nativeAprRecord": {
+    "title": "Morpho Vault V2 Native APR - senRLUSDv2",
+    "description": "Native APR (without rewards) for Morpho V2 vault senRLUSDv2 (0x6dc58a0fdfc8d694e571dc59b9a52eeea780e6bf) on chain 1",
+    "value": 2.646730002202934,
+    "timestamp": "1793750400",
+    "breakdowns": [
+      {
+        "title": "Morpho Vault V2 Native APR - senRLUSDv2",
+        "description": "Native APR (without rewards) for Morpho V2 vault senRLUSDv2 (0x6dc58a0fdfc8d694e571dc59b9a52eeea780e6bf) on chain 1",
+        "value": 2.646730002202934
+      }
+    ]
+  },
+  "tvlRecord": {
+    "id": "4634283577463328144",
+    "total": 431533047.44705623,
+    "timestamp": "1793750400",
+    "breakdowns": [
+      { "identifier": "12124343669875024301", "type": "TOKEN", "value": 424792772.03901774 }
+    ]
+  },
+  "rewardsRecord": {
+    "id": "4634283577463328144",
+    "total": 33060.525866657146,
+    "timestamp": "1793750400",
+    "breakdowns": [
+      {
+        "token": {
+          "id": "6340883670170224181",
+          "name": "RLUSD",
+          "chainId": 1,
+          "address": "0x8292Bb45bf1Ee4d140127049757C2E0fF06317eD",
+          "decimals": 18,
+          "symbol": "RLUSD",
+          "icon": "https://storage.googleapis.com/merkl-static-assets/tokens/RLUSD.svg",
+          "verified": true,
+          "isNative": false,
+          "isTest": false,
+          "type": "TOKEN",
+          "price": 0.9998672747394898,
+          "updatedAt": 1793786194,
+          "priceSource": "Price Source RLUSD",
+          "displaySymbol": "RLUSD"
+        },
+        "amount": "33067857142857146040320",
+        "maxAmount": "33067857142857146040320",
+        "value": 33063.46820290334,
+        "maxValue": 33063.46820290334,
+        "distributionType": "MAX_REWARD_VALUE_PER_LIQUIDITY_VALUE",
+        "onChainCampaignId": "0x5c5688f390c93ced02c762a0972205eb74ec624add08269204927de9a613026a",
+        "id": "6d48f22c-d3fe-42a8-b42e-7be4d7231312",
+        "grain": "DAY",
+        "timestamp": "1793750400",
+        "open": 33067.857142857145,
+        "min": 33067.857142857145,
+        "max": 33067.857142857145,
+        "avg": 33067.85714285715,
+        "samples": 33,
+        "campaignId": "2609054996134165790",
+        "dailyRewardsRecordId": "4634283577463328144"
+      }
+    ]
+  }
+}

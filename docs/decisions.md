@@ -56,6 +56,20 @@ The status defaults to `LIVE` because past opportunities are rarely what someone
 
 The cost: one small mapping function to maintain.
 
+## Parsing Merkl responses
+
+I validate what Merkl sends with Zod, but only the fields I use, and fields that real data sometimes omits are optional. If Merkl adds fields nothing breaks, and if it removes one I use I get a clear `invalid_response` error instead of `undefined` deep in the UI.
+
+Status and action stay plain strings at this level. Turning them into my enums is the mapper's job, so a new Merkl action can't make the whole list fail.
+
+The cost: one bad item fails the whole page. Skipping bad items would need logging, which I'll add with the logger.
+
+## Faking Merkl with Mock Service Worker
+
+The client uses the real `fetch`, and MSW intercepts it in tests. That tests the actual URLs, headers and error handling, not a mock I wrote myself. Any request without a handler fails the test, so nothing can reach the real Merkl by accident.
+
+The cost: tests depend on fixtures that can drift from the live API, so I recorded them from real responses.
+
 ## CI as one matrix
 
 I run the four checks as a matrix of parallel jobs instead of steps in one job. Each check shows up separately on the PR, and a lint error doesn't stop the tests from running.
