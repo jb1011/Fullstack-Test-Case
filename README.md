@@ -21,7 +21,7 @@ I chose **opportunities**: it is the core resource of Merkl, and the Merkl API s
 | -------- | ------------------------------------------------------------------------------------- |
 | Monorepo | npm workspaces: `apps/api`, `apps/web`, `packages/shared`                             |
 | API      | Node, Express 5, TypeScript, Zod, pino                                                |
-| Web      | React Router v7 (framework mode, SSR), TanStack Query v5, Chakra UI, motion, Recharts |
+| Web      | React Router v8 (framework mode, SSR), TanStack Query v5, Chakra UI, motion, Recharts |
 | Shared   | Zod schemas and inferred types, consumed as TypeScript source (no build step)         |
 | Tooling  | strict TypeScript, ESLint (flat config, typescript-eslint, react-hooks), Prettier     |
 | Tests    | Vitest, Supertest, MSW, Testing Library, Playwright (end to end, last)                |
@@ -147,7 +147,7 @@ Every commit ships with unit tests:
 
 ## Getting started
 
-Prerequisites: Node 22.9 or later (see `.nvmrc`) and npm 10.
+Prerequisites: Node 22.22 or later (see `.nvmrc`) and npm 10.
 
 ```bash
 nvm use
@@ -155,7 +155,7 @@ npm install
 npm run dev
 ```
 
-The API listens on `http://localhost:4000`. Every setting has a default, so no `.env` is needed. To override one, copy `apps/api/.env.example` to `apps/api/.env`.
+The API listens on `http://localhost:4000` and the web app on `http://localhost:5173`. Every API setting has a default, so no `.env` is needed. To override one, copy `apps/api/.env.example` to `apps/api/.env`.
 
 | Command                | What it does                                |
 | ---------------------- | ------------------------------------------- |
@@ -165,3 +165,4 @@ The API listens on `http://localhost:4000`. Every setting has a default, so no `
 | `npm run typecheck`    | Type checks every workspace                 |
 | `npm run lint`         | Lints the whole repository                  |
 | `npm run format:check` | Checks formatting (`npm run format` to fix) |
+| `npm run build`        | Builds the web app                          |

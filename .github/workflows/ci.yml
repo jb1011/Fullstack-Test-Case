@@ -29,6 +29,8 @@ jobs:
             script: typecheck
           - name: Unit tests
             script: test
+          - name: Build
+            script: build
     steps:
       - uses: actions/checkout@v7
 

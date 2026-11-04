@@ -126,10 +126,16 @@ The cost: tests depend on fixtures that can drift from the live API, so I record
 
 ## CI as one matrix
 
-I run the four checks as a matrix of parallel jobs instead of steps in one job. Each check shows up separately on the PR, and a lint error doesn't stop the tests from running.
+I run each check as its own job in a matrix instead of steps in one job. Each check shows up separately on the PR, and a lint error doesn't stop the tests from running. The web build is one of those jobs.
 
 ## Chakra UI only
 
 Chakra gives me components and styling in one tool. Adding Tailwind would mean two styling systems fighting each other.
 
 The cost: Chakra uses Emotion, which needs a bit of SSR setup.
+
+## React Router 8
+
+The web app uses React Router 8 in framework mode, with server rendering on. It is the current major, and loaders, middleware and client loaders work the way the hydration plan needs. Starting on v7 would mean adopting the previous major.
+
+The cost: Node has to be 22.22 or newer.

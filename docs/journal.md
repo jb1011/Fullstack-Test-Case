@@ -139,3 +139,9 @@ Tested: two queries that mean the same thing share one fetch, a different page f
 Each successful response tells caches how long it stays fresh, and that time is the same one the server uses: 60 seconds for a list or a detail, 5 minutes for history, and an hour for filters. The data is public, since it doesn't depend on the caller. Health and every error are `no-store`, so a down check or a 502 is never saved.
 
 Tested: the list and the detail send `max-age=60`, history sends `300`, filters sends `3600`, and a 400, a 404, a 502 and the health check send `no-store`.
+
+## 7.1 Scaffold React Router with Chakra UI and server rendering
+
+The web app is React Router 8 with server rendering, styled with Chakra. The server pulls Emotion styles into the HTML stream, so the first paint already has CSS. `npm run dev` starts it beside the API, and CI builds the app along with the other checks.
+
+Tested: the home page renders its title, a server render of that page includes Chakra styles, and `npm run build` completes.
