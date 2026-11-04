@@ -45,3 +45,9 @@ Tested: I replayed the CI steps locally (`npm ci` then the four scripts) and the
 If I push twice to a PR, the first run is cancelled because only the latest commit matters. On `main` nothing is cancelled, so every merge gets checked. The README badge shows the status of `main`.
 
 Tested: the cancel behavior shows up on this PR's checks when I push again.
+
+## 3.1 Add opportunity enums
+
+Status, action, sort and order as Zod enums in `shared`, each exporting its schema and its TypeScript type. The values come from Merkl's docs, and I checked them against 618 live opportunities. I only expose three sorts (APR, TVL, rewards) because that's what the list page offers. I used Zod enums instead of TypeScript `enum` because they validate at runtime and don't need a compile step.
+
+Tested: valid values pass, unknown and wrong case values fail, and the action list matches Merkl's. The `shared` smoke test is gone now that real tests replace it.

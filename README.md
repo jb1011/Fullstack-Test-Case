@@ -130,10 +130,10 @@ Every commit ships with unit tests:
 
 1. **Tooling and monorepo scaffold** (done): workspaces, strict TypeScript, ESLint, Prettier, Vitest, single `npm run dev`.
 2. **CI** (done): GitHub Actions running format check, lint, typecheck and tests on every PR.
-3. **Shared package**: Zod schemas for queries and DTOs.
-4. **API, Merkl client and mappers**: tested with MSW.
-5. **API, cache**: TTL, stale while revalidate, deduplication, LRU, tested with fake timers.
-6. **API, routes and middleware**: validation, errors, `Cache-Control`, tested with Supertest.
+3. **Shared query contract**: Zod enums and the opportunities query schema.
+4. **API, Merkl client, DTOs and mappers**: DTO schemas designed from real Merkl responses, tested with MSW.
+5. **API, routes**: a working API with validation and errors, tested with Supertest.
+6. **API, cache**: TTL, stale while revalidate, deduplication, LRU, `Cache-Control`, tested with fake timers.
 7. **Web, SSR foundation and list page**: QueryClient middleware, hydration, filters in the URL.
 8. **Web, item page**: details, streamed chart, `clientLoader`.
 9. **Polish and end to end tests**: prefetching, skeletons, transitions, Playwright.
