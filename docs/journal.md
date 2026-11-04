@@ -77,3 +77,9 @@ Tested: new fixtures recorded from real responses, tests for each method and the
 The shapes my API sends, in `shared` so the web app uses the same types. I designed them from the fixtures: a list row (name, chain, protocol, action, status, APR, TVL, daily rewards, tokens), the item page adds description, deposit link and campaign dates, and the list response carries the total count and total TVL so the header needs no extra request.
 
 Tested: realistic examples parse, an opportunity without a protocol is accepted, an unknown status and a non ISO date are rejected.
+
+## 4.4 Map Merkl objects to DTOs
+
+Plain functions that turn what Merkl sends into what my API returns. They clean up Merkl's quirks in one place: empty icons and missing fields become `null`, campaign dates go from unix seconds to ISO, history goes from newest first in seconds to oldest first in milliseconds. The filters list sorts chains and protocols by name and hides the `INVALID` action.
+
+Tested: the real fixtures are mapped and every result is validated against the shared DTO schemas, so the mapper and the contract can't disagree. Unknown actions, malformed dates and missing fields are covered too.

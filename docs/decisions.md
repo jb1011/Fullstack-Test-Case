@@ -78,6 +78,10 @@ The DTOs are the contract between the API and the web app, so they're plain inte
 
 The query schema and Merkl's schemas still infer their types. The query schema transforms its input, so its input and output types differ and inference gives both. Merkl's schemas are internal and only exist to parse.
 
+## Unknown Merkl values
+
+If Merkl starts sending an action or status I don't know, that opportunity is skipped from the list instead of failing the whole page. The detail mapper returns `null` for it, so the route can answer 404.
+
 ## Faking Merkl with Mock Service Worker
 
 The client uses the real `fetch`, and MSW intercepts it in tests. That tests the actual URLs, headers and error handling, not a mock I wrote myself. Any request without a handler fails the test, so nothing can reach the real Merkl by accident.
