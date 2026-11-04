@@ -12,6 +12,8 @@
   },
   "packageManager": "npm@10.9.4",
   "scripts": {
+    "dev": "concurrently --kill-others-on-fail --prefix-colors auto \"npm:dev:*\"",
+    "dev:api": "npm run dev -w @merkl/api",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -22,6 +24,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "concurrently": "^10.0.6",
     "eslint": "^10.14.0",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^17.14.0",

@@ -27,3 +27,9 @@ Tested: `npm run lint` and `npm run format:check` pass. A file with a floating p
 One `npm test` at the root runs every workspace, and each workspace keeps its own config so the web app can use a browser like environment later without affecting the API. The API smoke test imports `@merkl/shared`, which proves the workspace link and the TypeScript source export both work. The web app joins in PR 7 when it has code.
 
 Tested: 2 smoke tests pass, and `npx vitest --project api` runs a single workspace.
+
+## 1.5 Add root dev script with concurrently
+
+`npm run dev` starts every `dev:*` script at the root in parallel, each with its own colored prefix. For now that's only the API, running under `tsx watch` so it restarts on every save. The web app becomes one more `dev:web` line in PR 7.
+
+Tested: I ran `npm run dev`, edited `src/index.ts`, and tsx reran it under the `[api]` prefix.

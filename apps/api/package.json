@@ -4,12 +4,14 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "tsx watch --clear-screen=false src/index.ts",
     "typecheck": "tsc"
   },
   "dependencies": {
     "@merkl/shared": "*"
   },
   "devDependencies": {
-    "@types/node": "^22.20.5"
+    "@types/node": "^22.20.5",
+    "tsx": "^4.23.15"
   }
 }
