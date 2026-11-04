@@ -1,5 +1,7 @@
 # Merkl Opportunities Explorer
 
+[![CI](https://github.com/jb1011/Fullstack-Test-Case/actions/workflows/ci.yml/badge.svg)](https://github.com/jb1011/Fullstack-Test-Case/actions/workflows/ci.yml)
+
 A fullstack SSR application that lets you browse [Merkl](https://merkl.xyz) opportunities through my own API, which sits in front of the [Merkl API](https://api.merkl.xyz/docs).
 
 > Status: planning. This README describes the target architecture and the roadmap. Each section will be updated as the pull requests land.
@@ -127,7 +129,7 @@ Every commit ships with unit tests:
 ## Roadmap
 
 1. **Tooling and monorepo scaffold** (done): workspaces, strict TypeScript, ESLint, Prettier, Vitest, single `npm run dev`.
-2. **CI**: GitHub Actions running format check, lint, typecheck and tests on every PR.
+2. **CI** (done): GitHub Actions running format check, lint, typecheck and tests on every PR.
 3. **Shared package**: Zod schemas for queries and DTOs.
 4. **API, Merkl client and mappers**: tested with MSW.
 5. **API, cache**: TTL, stale while revalidate, deduplication, LRU, tested with fake timers.
