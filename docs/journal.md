@@ -57,3 +57,29 @@ Tested: valid values pass, unknown and wrong case values fail, and the action li
 One Zod schema turns raw URL strings into a typed query: lists like `chain=42161,1` become sorted unique arrays, numbers are coerced, blanks count as absent (so `minTvl=` isn't read as 0), and defaults fill the rest. `serializeOpportunitiesQuery` does the reverse and always gives the same string for the same filters, whatever the order in the URL. The API will validate requests with it, the web app will build its URLs with it, and the cache will use the string as its key.
 
 Tested: 20 cases covering defaults, lists, coercion, blanks, invalid values, min above max, and a round trip. Breaking the blank handling makes a test fail.
+
+## 4.1 Add Merkl client for opportunities
+
+A small client for Merkl's list, count and detail endpoints. It translates my query names into Merkl's, gives up after 5 seconds, and parses responses with a Zod schema that keeps only the fields I use. Every failure becomes a `MerklError` with a `kind` (timeout, network, not found, http, invalid response), so the routes can later turn each one into the right HTTP status.
+
+Before writing the schema I checked 618 live opportunities: 96 have no protocol and many have no deposit URL or campaign dates, so those fields are optional. The test fixtures are real Merkl responses, including one without a protocol.
+
+Tested: MSW fakes Merkl and fails any request without a handler. The tests cover the translated parameters, parsing, and every error kind including the timeout. I also ran the client once against the real API: 618 opportunities parsed without error.
+
+## 4.2 Add Merkl client for history and filters
+
+The rest of what the app needs from Merkl: APR and TVL history (one point per day, 90 days by default) for the item page chart, the total TVL of everything matching the filters for the list header, and chains and protocols for the filter dropdowns. Merkl has 247 protocols, so one request of up to 500 gets them all without paging.
+
+Tested: new fixtures recorded from real responses, tests for each method and the parameters it sends.
+
+## 4.3 Add response DTO schemas
+
+The shapes my API sends, in `shared` so the web app uses the same types. I designed them from the fixtures: a list row (name, chain, protocol, action, status, APR, TVL, daily rewards, tokens), the item page adds description, deposit link and campaign dates, and the list response carries the total count and total TVL so the header needs no extra request.
+
+Tested: realistic examples parse, an opportunity without a protocol is accepted, an unknown status and a non ISO date are rejected.
+
+## 4.4 Map Merkl objects to DTOs
+
+Plain functions that turn what Merkl sends into what my API returns. They clean up Merkl's quirks in one place: empty icons and missing fields become `null`, campaign dates go from unix seconds to ISO, history goes from newest first in seconds to oldest first in milliseconds. The filters list sorts chains and protocols by name and hides the `INVALID` action.
+
+Tested: the real fixtures are mapped and every result is validated against the shared DTO schemas, so the mapper and the contract can't disagree. Unknown actions, malformed dates and missing fields are covered too.

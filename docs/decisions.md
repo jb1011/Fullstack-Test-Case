@@ -56,6 +56,38 @@ The status defaults to `LIVE` because past opportunities are rarely what someone
 
 The cost: one small mapping function to maintain.
 
+## Parsing Merkl responses
+
+I validate what Merkl sends with Zod, but only the fields I use, and fields that real data sometimes omits are optional. If Merkl adds fields nothing breaks, and if it removes one I use I get a clear `invalid_response` error instead of `undefined` deep in the UI.
+
+Status and action stay plain strings at this level. Turning them into my enums is the mapper's job, so a new Merkl action can't make the whole list fail.
+
+The cost: one bad item fails the whole page. Skipping bad items would need logging, which I'll add with the logger.
+
+## DTO shape
+
+Missing values are always `null`. Merkl mixes empty strings, missing keys and `null`, and the UI shouldn't have to check all three. Dates are ISO strings and chart points use millisecond timestamps, because that's what `Date` and Recharts expect. History points come oldest first, ready to draw.
+
+The total TVL rides along with the list response instead of having its own endpoint: it depends on the same filters, so it's cached and invalidated together.
+
+The cost: one more Merkl call per list request, which the cache absorbs.
+
+## DTO types written by hand
+
+The DTOs are the contract between the API and the web app, so they're plain interfaces anyone can read without knowing Zod. Each schema is checked against its interface with `satisfies z.ZodType<T>`, so the two can't drift apart. I used `satisfies` rather than a type annotation because an annotation widens the schema and loses `.extend()`.
+
+The query schema and Merkl's schemas still infer their types. The query schema transforms its input, so its input and output types differ and inference gives both. Merkl's schemas are internal and only exist to parse.
+
+## Unknown Merkl values
+
+If Merkl starts sending an action or status I don't know, that opportunity is skipped from the list instead of failing the whole page. The detail mapper returns `null` for it, so the route can answer 404.
+
+## Faking Merkl with Mock Service Worker
+
+The client uses the real `fetch`, and MSW intercepts it in tests. That tests the actual URLs, headers and error handling, not a mock I wrote myself. Any request without a handler fails the test, so nothing can reach the real Merkl by accident.
+
+The cost: tests depend on fixtures that can drift from the live API, so I recorded them from real responses.
+
 ## CI as one matrix
 
 I run the four checks as a matrix of parallel jobs instead of steps in one job. Each check shows up separately on the PR, and a lint error doesn't stop the tests from running.

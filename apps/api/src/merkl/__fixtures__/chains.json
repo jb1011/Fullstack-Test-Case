@@ -1,0 +1,50 @@
+[
+  {
+    "id": 80094,
+    "name": "Berachain",
+    "icon": "https://storage.googleapis.com/merkl-static-assets/chains/80094.svg",
+    "liveCampaigns": 0,
+    "endOfDisputePeriod": 1793037600,
+    "explorers": [
+      {
+        "id": "7928635917938434678",
+        "type": "ETHERSCAN",
+        "url": "https://berascan.com/",
+        "chainId": 80094
+      }
+    ],
+    "lastClaimsOnchainFetchTimestamp": "1793090740"
+  },
+  {
+    "id": 43111,
+    "name": "Hemi",
+    "icon": "https://storage.googleapis.com/merkl-static-assets/chains/43111.svg",
+    "liveCampaigns": 6,
+    "endOfDisputePeriod": 1793786400,
+    "explorers": [
+      {
+        "id": "15297234275082487057",
+        "type": "BLOCKSCOUT",
+        "url": "https://explorer.hemi.xyz/",
+        "chainId": 43111
+      }
+    ],
+    "lastClaimsOnchainFetchTimestamp": "1793758763"
+  },
+  {
+    "id": 8217,
+    "name": "Kaia",
+    "icon": "https://storage.googleapis.com/merkl-static-assets/chains/8217.svg",
+    "liveCampaigns": 1,
+    "endOfDisputePeriod": 1793775600,
+    "explorers": [
+      {
+        "id": "15893138364288758042",
+        "type": "ETHERSCAN",
+        "url": "https://kaiascan.io",
+        "chainId": 8217
+      }
+    ],
+    "lastClaimsOnchainFetchTimestamp": "1793586866"
+  }
+]

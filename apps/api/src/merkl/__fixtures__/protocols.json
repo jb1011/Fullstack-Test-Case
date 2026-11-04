@@ -1,0 +1,75 @@
+[
+  {
+    "id": "1inch",
+    "name": "1inch",
+    "icon": "https://storage.googleapis.com/merkl-static-assets/protocols/1inch.svg",
+    "tags": [],
+    "description": "Swap crypto tokens at the best rates",
+    "url": "https://1inch.com/",
+    "banner": null,
+    "opportunityBannerLight": null,
+    "opportunityBannerDark": null,
+    "trustData": null,
+    "dailyRewards": 0,
+    "numberOfLiveCampaigns": 0,
+    "opportunityLiveTags": ["POOL", "DROP", "SWAP"]
+  },
+  {
+    "id": "40acres",
+    "name": "40acres",
+    "icon": "https://storage.googleapis.com/merkl-static-assets/protocols/40acres.svg",
+    "tags": [],
+    "description": "The Lending platform for any yield-bearing asset",
+    "url": "https://app.40acres.finance/",
+    "banner": null,
+    "opportunityBannerLight": null,
+    "opportunityBannerDark": null,
+    "trustData": {
+      "tvl": 2271566.18128668,
+      "slug": "40-acres",
+      "hacks": [],
+      "audits": "2",
+      "github": ["40-Acres"],
+      "twitter": "40acres_Finance",
+      "category": "Lending",
+      "listedAt": 1744906971,
+      "syncedAt": 1793765067,
+      "audit_note": null,
+      "audit_links": [
+        "https://40acres.gitbook.io/40acres/technical-docs/smart-contracts#audit-report"
+      ],
+      "parentProtocol": null
+    },
+    "dailyRewards": 0,
+    "numberOfLiveCampaigns": 0,
+    "opportunityLiveTags": ["HOLD"]
+  },
+  {
+    "id": "9summits",
+    "name": "9Summits",
+    "icon": "https://storage.googleapis.com/merkl-static-assets/protocols/9summit.png",
+    "tags": ["9summits"],
+    "description": "DeFi curator & vault operator on Lagoon, Morpho and Turtle",
+    "url": "https://lagoon.finance/",
+    "banner": null,
+    "opportunityBannerLight": null,
+    "opportunityBannerDark": null,
+    "trustData": {
+      "tvl": 19216399.115417775,
+      "slug": "9summits",
+      "hacks": [],
+      "audits": "0",
+      "github": [],
+      "twitter": "nine_summits",
+      "category": "Risk Curators",
+      "listedAt": 1747733002,
+      "syncedAt": 1793765063,
+      "audit_note": null,
+      "audit_links": [],
+      "parentProtocol": null
+    },
+    "dailyRewards": 0,
+    "numberOfLiveCampaigns": 0,
+    "opportunityLiveTags": ["HOLD"]
+  }
+]
