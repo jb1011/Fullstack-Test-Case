@@ -21,3 +21,9 @@ Tested: `npm run typecheck` passes, and a file reading `xs[0]` into a `string` i
 One ESLint config at the root for the whole repo, using typescript-eslint's strict type aware rules. Prettier handles formatting, and `eslint-config-prettier` turns off the ESLint rules that would fight it. React rules come with the web app in PR 7.
 
 Tested: `npm run lint` and `npm run format:check` pass. A file with a floating promise and an `any` gets 3 errors.
+
+## 1.4 Add Vitest with one project per workspace
+
+One `npm test` at the root runs every workspace, and each workspace keeps its own config so the web app can use a browser like environment later without affecting the API. The API smoke test imports `@merkl/shared`, which proves the workspace link and the TypeScript source export both work. The web app joins in PR 7 when it has code.
+
+Tested: 2 smoke tests pass, and `npx vitest --project api` runs a single workspace.
