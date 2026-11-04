@@ -39,3 +39,9 @@ Tested: I ran `npm run dev`, edited `src/index.ts`, and tsx reran it under the `
 Every PR and every push to `main` runs format check, lint, typecheck and tests. A matrix turns them into four parallel jobs, so one failure doesn't hide the others and each shows up as its own check on the PR. Node comes from `.nvmrc`, so CI and my machine always use the same version.
 
 Tested: I replayed the CI steps locally (`npm ci` then the four scripts) and they pass. The real proof is this PR's checks.
+
+## 2.2 Cancel superseded runs and add README badge
+
+If I push twice to a PR, the first run is cancelled because only the latest commit matters. On `main` nothing is cancelled, so every merge gets checked. The README badge shows the status of `main`.
+
+Tested: the cancel behavior shows up on this PR's checks when I push again.
