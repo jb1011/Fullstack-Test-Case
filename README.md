@@ -15,14 +15,14 @@ I chose **opportunities**: it is the core resource of Merkl, and the Merkl API s
 
 ## Stack
 
-| Area     | Choice                                                                                          |
-| -------- | ----------------------------------------------------------------------------------------------- |
-| Monorepo | npm workspaces: `apps/api`, `apps/web`, `packages/shared`                                       |
-| API      | Node, Express 5, TypeScript, Zod, pino                                                          |
-| Web      | React Router v7 (framework mode, SSR), TanStack Query v5, Chakra UI, motion, Recharts           |
-| Shared   | Zod schemas and inferred types, consumed as TypeScript source (no build step)                   |
-| Tooling  | strict TypeScript, ESLint (flat config, typescript-eslint, react-hooks), Prettier               |
-| Tests    | Vitest, Supertest, MSW, Testing Library, Playwright (end to end, last)                          |
+| Area     | Choice                                                                                |
+| -------- | ------------------------------------------------------------------------------------- |
+| Monorepo | npm workspaces: `apps/api`, `apps/web`, `packages/shared`                             |
+| API      | Node, Express 5, TypeScript, Zod, pino                                                |
+| Web      | React Router v7 (framework mode, SSR), TanStack Query v5, Chakra UI, motion, Recharts |
+| Shared   | Zod schemas and inferred types, consumed as TypeScript source (no build step)         |
+| Tooling  | strict TypeScript, ESLint (flat config, typescript-eslint, react-hooks), Prettier     |
+| Tests    | Vitest, Supertest, MSW, Testing Library, Playwright (end to end, last)                |
 
 ## Architecture
 
@@ -126,7 +126,7 @@ Every commit ships with unit tests:
 
 ## Roadmap
 
-1. **Tooling and monorepo scaffold**: workspaces, strict TypeScript, ESLint, Prettier, Vitest, single `npm run dev`.
+1. **Tooling and monorepo scaffold** (done): workspaces, strict TypeScript, ESLint, Prettier, Vitest, single `npm run dev`.
 2. **CI**: GitHub Actions running format check, lint, typecheck and tests on every PR.
 3. **Shared package**: Zod schemas for queries and DTOs.
 4. **API, Merkl client and mappers**: tested with MSW.
@@ -138,9 +138,24 @@ Every commit ships with unit tests:
 
 ## Documentation
 
-- `docs/decisions.md`: one section per decision, with context, choice, rejected alternatives and tradeoffs.
+- `docs/decisions.md`: why I picked what I picked, and what it costs.
 - `docs/journal.md`: one entry per commit, explaining what changed and why.
 
 ## Getting started
 
-Available once the scaffold lands (roadmap step 1).
+Prerequisites: Node 22 (see `.nvmrc`) and npm 10.
+
+```bash
+nvm use
+npm install
+npm run dev
+```
+
+| Command                | What it does                                |
+| ---------------------- | ------------------------------------------- |
+| `npm run dev`          | Starts every workspace in watch mode        |
+| `npm test`             | Runs every workspace's tests once           |
+| `npm run test:watch`   | Runs tests in watch mode                    |
+| `npm run typecheck`    | Type checks every workspace                 |
+| `npm run lint`         | Lints the whole repository                  |
+| `npm run format:check` | Checks formatting (`npm run format` to fix) |
