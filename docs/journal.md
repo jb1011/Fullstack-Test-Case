@@ -103,3 +103,9 @@ Tested: defaults, comma lists, repeated keys, blanks, an unknown parameter, a 40
 The list, the detail and the history are real endpoints now. A route only checks the query, calls the opportunities service and sends the DTO. The service asks Merkl for the page, the count and the total TVL at the same time, then maps them. A missing opportunity, and one with an action I don't know, both come back as 404. A Merkl failure still becomes 502 or 504 through the error handler.
 
 Tested: Supertest against MSW. The list matches the shared schema and Merkl receives page 0 when I ask for page 2. An invalid query never reaches Merkl. An id that isn't a number is 400, an unknown numeric id and an unknown action are 404, and a Merkl 500 is 502. The history comes back oldest first.
+
+## 5.4 Add filters route
+
+`GET /filters` feeds the dropdowns. The service asks Merkl for chains and protocols at the same time, and the actions come from my own enum with `INVALID` left out, so the list doesn't depend on downloading every opportunity. Chains and protocols are sorted by name.
+
+Tested: the response matches the shared schema, protocols are requested with `items=500` and come back sorted even when Merkl sends them backwards, and a Merkl 500 becomes a 502 that hides the upstream message.

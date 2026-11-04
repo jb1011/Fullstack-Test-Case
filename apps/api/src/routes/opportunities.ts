@@ -16,6 +16,10 @@ const idOf = (req: Request) => {
 export const createOpportunitiesRouter = (service: OpportunitiesService) => {
   const router = Router();
 
+  router.get("/filters", async (_req, res) => {
+    res.json(await service.filters());
+  });
+
   router.get("/opportunities", validateQuery(opportunitiesQuerySchema), async (_req, res) => {
     const query = readQuery(res, opportunitiesQuerySchema);
     res.json(await service.list(query));

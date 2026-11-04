@@ -1,11 +1,13 @@
-import { opportunitiesQuerySchema, opportunityListSchema } from "@merkl/shared";
+import { filtersSchema, opportunitiesQuerySchema, opportunityListSchema } from "@merkl/shared";
 import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
 
 import { createMerklClient } from "../merkl/client";
 import aprRecordsFixture from "../merkl/__fixtures__/apr-records.json";
+import chainsFixture from "../merkl/__fixtures__/chains.json";
 import opportunityFixture from "../merkl/__fixtures__/opportunity.json";
 import opportunitiesFixture from "../merkl/__fixtures__/opportunities.json";
+import protocolsFixture from "../merkl/__fixtures__/protocols.json";
 import tvlRecordsFixture from "../merkl/__fixtures__/tvl-records.json";
 import { MERKL_TEST_URL, server } from "../test/msw";
 import { createOpportunitiesService } from "./opportunities";
@@ -73,5 +75,30 @@ describe("history", () => {
 
     expect(timestamps).toEqual([...timestamps].sort((a, b) => a - b));
     expect(history?.apr.at(-1)?.timestamp).toBe(1793750400000);
+  });
+});
+
+describe("filters", () => {
+  it("loads every chain and protocol and sorts them by name", async () => {
+    let protocolItems: string | null = null;
+    server.use(
+      http.get(`${MERKL_TEST_URL}/v4/chains`, () => HttpResponse.json(chainsFixture)),
+      http.get(`${MERKL_TEST_URL}/v4/protocols`, ({ request }) => {
+        protocolItems = new URL(request.url).searchParams.get("items");
+        return HttpResponse.json([...protocolsFixture].reverse());
+      }),
+    );
+
+    const filters = await service.filters();
+
+    expect(protocolItems).toBe("500");
+    expect(filters.protocols.map((protocol) => protocol.id)).toEqual([
+      "1inch",
+      "40acres",
+      "9summits",
+    ]);
+    expect(filters.chains).toHaveLength(chainsFixture.length);
+    expect(filters.actions).not.toContain("INVALID");
+    expect(filtersSchema.parse(filters)).toEqual(filters);
   });
 });

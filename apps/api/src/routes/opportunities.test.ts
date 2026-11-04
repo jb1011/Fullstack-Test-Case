@@ -1,4 +1,5 @@
 import {
+  filtersSchema,
   opportunityDetailSchema,
   opportunityHistorySchema,
   opportunityListSchema,
@@ -11,8 +12,10 @@ import { z } from "zod";
 import { createApp } from "../app";
 import { createMerklClient } from "../merkl/client";
 import aprRecordsFixture from "../merkl/__fixtures__/apr-records.json";
+import chainsFixture from "../merkl/__fixtures__/chains.json";
 import opportunityFixture from "../merkl/__fixtures__/opportunity.json";
 import opportunitiesFixture from "../merkl/__fixtures__/opportunities.json";
+import protocolsFixture from "../merkl/__fixtures__/protocols.json";
 import tvlRecordsFixture from "../merkl/__fixtures__/tvl-records.json";
 import { createOpportunitiesService } from "../services/opportunities";
 import { MERKL_TEST_URL, server } from "../test/msw";
@@ -134,5 +137,36 @@ describe("GET /opportunities/:id/history", () => {
 
     expect(response.status).toBe(200);
     expect(history.apr.at(-1)?.timestamp).toBeGreaterThan(history.apr[0]?.timestamp ?? 0);
+  });
+});
+
+describe("GET /filters", () => {
+  it("returns chains, protocols and actions", async () => {
+    server.use(
+      http.get(`${MERKL_TEST_URL}/v4/chains`, () => json(chainsFixture)),
+      http.get(`${MERKL_TEST_URL}/v4/protocols`, () => json(protocolsFixture)),
+    );
+
+    const response = await request(app).get("/filters");
+    const filters = filtersSchema.parse(JSON.parse(response.text) as unknown);
+
+    expect(response.status).toBe(200);
+    expect(filters.chains).toHaveLength(chainsFixture.length);
+    expect(filters.protocols).toHaveLength(protocolsFixture.length);
+    expect(filters.actions).not.toContain("INVALID");
+  });
+
+  it("turns a Merkl failure into a 502 that hides the upstream message", async () => {
+    server.use(
+      http.get(`${MERKL_TEST_URL}/v4/chains`, () =>
+        HttpResponse.json({ message: "database password is hunter2" }, { status: 500 }),
+      ),
+      http.get(`${MERKL_TEST_URL}/v4/protocols`, () => json(protocolsFixture)),
+    );
+
+    const response = await request(app).get("/filters");
+
+    expect(response.status).toBe(502);
+    expect(response.text).not.toContain("hunter2");
   });
 });

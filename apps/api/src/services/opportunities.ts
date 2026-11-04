@@ -1,4 +1,5 @@
 import type {
+  Filters,
   OpportunitiesQuery,
   OpportunityDetail,
   OpportunityHistory,
@@ -7,12 +8,18 @@ import type {
 
 import type { MerklClient } from "../merkl/client";
 import { MerklError } from "../merkl/errors";
-import { toOpportunityDetail, toOpportunityHistory, toOpportunityList } from "../merkl/mappers";
+import {
+  toFilters,
+  toOpportunityDetail,
+  toOpportunityHistory,
+  toOpportunityList,
+} from "../merkl/mappers";
 
 export interface OpportunitiesService {
   list(query: OpportunitiesQuery): Promise<OpportunityList>;
   get(id: string): Promise<OpportunityDetail | null>;
   history(id: string): Promise<OpportunityHistory | null>;
+  filters(): Promise<Filters>;
 }
 
 const missingAsNull = (error: unknown): null => {
@@ -36,4 +43,9 @@ export const createOpportunitiesService = (merkl: MerklClient): OpportunitiesSer
     Promise.all([merkl.getAprRecords(id), merkl.getTvlRecords(id)])
       .then(([apr, tvl]) => toOpportunityHistory(apr, tvl))
       .catch(missingAsNull),
+
+  async filters() {
+    const [chains, protocols] = await Promise.all([merkl.listChains(), merkl.listProtocols()]);
+    return toFilters(chains, protocols);
+  },
 });
