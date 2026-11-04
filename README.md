@@ -83,7 +83,7 @@ There are two layers with two different jobs.
 | Chains and protocols | 1 h       |
 
 - **Storage behind an interface**: `get`, `set` and `delete`. Values are copied, so one request cannot edit the object another request receives.
-- **Fake timers**: tests move the clock without waiting.
+- **A clock passed into the store**: tests move time by handing the store a `now` function.
 
 ### Client cache (makes navigation instant)
 

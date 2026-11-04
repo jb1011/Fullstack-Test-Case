@@ -92,6 +92,8 @@ The in memory store is the `lru-cache` package. It is the usual LRU in Node serv
 
 Values are copied on the way in and out. The package stores the object you give it, and one request must not be able to edit what another request receives.
 
+Tests pass a clock into the store. Fake timers start `performance.now()` at 0, and the package treats a start time of 0 as "no timestamp", so an entry would never expire.
+
 ## HTTP stays in the routes
 
 The opportunities service returns `null` when Merkl has nothing, or when an opportunity uses an action or status I don't know. The route turns that into a 404. I didn't throw HTTP errors from the service, because the cache will wrap the service next and a cache shouldn't know about status codes.

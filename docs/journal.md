@@ -115,3 +115,9 @@ Tested: the response matches the shared schema, protocols are requested with `it
 The cache sits behind `get`, `set` and `delete`, and the memory store is the `lru-cache` package. It keeps a fixed number of entries and drops the least recently used one when it is full. Reading or replacing an entry makes it the newest. Values are copied on the way in and out, because the package stores the object you give it and a caller must not be able to change what the next request gets.
 
 Tested: a missing key, null as a real value, an update that does not grow the store, eviction, a read that saves an entry from eviction, copying, delete, and a store that refuses undefined and a non positive size.
+
+## 6.2 Add a TTL per entry
+
+`set` takes a TTL in milliseconds. A list is fresh for 60 seconds, history for 5 minutes, and chains and protocols for an hour. After that, `get` returns nothing and the caller fetches again. Leaving the TTL off keeps the entry until the size limit drops it, which is what the eviction tests use.
+
+Tested: a value is present at the exact TTL and gone one millisecond later, two keys expire on their own, replacing a value restarts its TTL, an entry with no TTL survives the longest lifetime, and a non positive TTL is refused.
