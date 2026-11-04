@@ -2,6 +2,7 @@ import type { RequestHandler } from "express";
 import express from "express";
 import { pinoHttp } from "pino-http";
 
+import { allowAnyOrigin } from "./http/cors";
 import { errorHandler, notFoundHandler } from "./http/errors";
 import type { Logger } from "./logger";
 import { healthRouter } from "./routes/health";
@@ -16,6 +17,7 @@ export const createApp = ({ logger, routes = [] }: AppDeps) => {
 
   app.disable("x-powered-by");
   app.set("query parser", "extended");
+  app.use(allowAnyOrigin);
   app.use(pinoHttp({ logger, autoLogging: { ignore: (req) => req.url === "/health" } }));
 
   app.use(healthRouter);

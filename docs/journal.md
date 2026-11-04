@@ -139,3 +139,57 @@ Tested: two queries that mean the same thing share one fetch, a different page f
 Each successful response tells caches how long it stays fresh, and that time is the same one the server uses: 60 seconds for a list or a detail, 5 minutes for history, and an hour for filters. The data is public, since it doesn't depend on the caller. Health and every error are `no-store`, so a down check or a 502 is never saved.
 
 Tested: the list and the detail send `max-age=60`, history sends `300`, filters sends `3600`, and a 400, a 404, a 502 and the health check send `no-store`.
+
+## 7.1 Scaffold React Router with Chakra UI and server rendering
+
+The web app is React Router 8 with server rendering, styled with Chakra. The server pulls Emotion styles into the HTML stream, so the first paint already has CSS. `npm run dev` starts it beside the API, and CI builds the app along with the other checks.
+
+Tested: the home page renders its title, a server render of that page includes Chakra styles, and `npm run build` completes.
+
+## 7.2 Add the API client and query factories
+
+The web app now has one client for my API, and one set of TanStack query factories. A list is keyed by the normalized query, so two requests that mean the same thing share a cache entry. A list or a detail stays fresh for 60 seconds, history for 5 minutes, and the filter lists for an hour, the same times the API keeps them. Nothing on the page calls this yet.
+
+Tested: the client sends the normalized query and parses the DTOs, a 404 comes back as the problem detail, a bad payload is rejected, and equivalent filters produce the same query key.
+
+## 7.3 Add per request QueryClient and hydration
+
+Each request gets its own QueryClient in middleware, so one render cannot see another request's data. The root loader hands that cache to the HTML after every loader on the request has finished, and the browser restores it into one client for the session. A URL that matches nothing never runs middleware, so that error page gets an empty client of its own. TanStack Query and React Router devtools are on while I am developing.
+
+Tested: two requests get different clients, a query that resolves after the loader data is created is still in the dehydrated state, and a hydrated `useQuery` renders that data without fetching again.
+
+## 7.4 Add the list page with a loader and a client loader
+
+The home page now shows the first page of live opportunities. The server loader fetches that page into the request cache, and the component reads it with `useQuery`. On a later visit in the browser, the client loader uses the same query, so a fresh list is not fetched again. The API allows any origin so the browser can read that response.
+
+Tested: the loader requests the default list once, a hydrated client loader does not request it again, the page renders the opportunity, and every API response allows any origin.
+
+## 7.5 Sync the filters with the URL
+
+The list now follows the query in the address. Chain, protocol, action, status, TVL, APR, search and sort are form controls, and the loader parses them with the shared schema before it fetches the page and the filter choices. Changing a filter starts again at page 1, and a fresh result is not fetched twice. Reset clears the address back to the default list. Merkl sends a null total when nothing matches, so I treat that as zero and the page stays empty instead of failing.
+
+Tested: a filtered URL is requested once and reused after hydration, choosing a chain writes that chain into the URL and loads that list, reset clears the address, and a null total becomes zero.
+
+## 7.6 Add pagination and a total TVL header
+
+The header shows the total TVL of everything matching the filters, which is already part of the list response, so it does not take another request. Previous and next write the page into the address and leave the other filters alone. The first and last pages stop there.
+
+Tested: the header shows the total from the list, and next keeps the chain filter while loading page 2.
+
+## 7.7 Add an error boundary and an empty state
+
+A list that matches nothing now says so, and the filters stay so the query can be changed. A failed load becomes a short message, because the browser otherwise receives a plain error and loses the reason. The error boundary shows that message and a way to try again.
+
+Tested: an empty list shows the message and hides the pages, a page past the end says that page is empty, an invalid address says the filters are not valid, and a loader error shows the boundary.
+
+## 7.8 Restyle the list
+
+The list now looks like the explorer: a light page, Geist, two totals, a filter bar and a table. The design notes used Tailwind, so I put the same colours and sizes into the Chakra theme. Sort sits in the column headers. Maximum TVL and minimum APR still work from the address. Active filters stay in the bar, with no second row of tags, so the list does not jump when the first filter is chosen. A segment such as Lend or Soon selects immediately. The rows become skeletons only when that list is not already fresh in the cache. I left out a rewards total and a TVL change, because those numbers are not in the API. A row does not open an item page yet, and hovering it does not show View. The time box is past, so after the item page I will only add one Playwright test and skip the rest of the polish.
+
+Tested: a chain filter still writes the URL and loads that list, reset clears the address, the totals and the next page still work, the empty and error states still show, Lend is pressed while a new list is loading, and a cached list shows without skeletons.
+
+## 7.9 Fix the home test type
+
+The test that holds a list until I release it was assigning the promise resolve directly. Typecheck rejects that, because that function does not return undefined. It now calls resolve from a function with the right type.
+
+Tested: the web typecheck passes.

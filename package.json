@@ -8,12 +8,14 @@
     "packages/*"
   ],
   "engines": {
-    "node": ">=22.9"
+    "node": ">=22.22"
   },
   "packageManager": "npm@10.9.4",
   "scripts": {
     "dev": "concurrently --kill-others-on-fail --prefix-colors auto \"npm:dev:*\"",
     "dev:api": "npm run dev -w @merkl/api",
+    "dev:web": "npm run dev -w @merkl/web",
+    "build": "npm run build --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -24,9 +26,11 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@tanstack/eslint-plugin-query": "^5.105.3",
     "concurrently": "^10.0.6",
     "eslint": "^10.14.0",
     "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.14.0",
     "prettier": "^3.9.10",
     "typescript": "~6.0.3",

@@ -104,8 +104,6 @@ The cost: an old value can sit in memory until the size limit drops it.
 
 I cache the DTO a route returns, not each Merkl call on its own. A list is the page, the count and the total TVL together, so they stay one snapshot and expire together. The key is the normalized query, which already sorts values and drops defaults, so the same filters share an entry whatever order they arrived in.
 
-The cost: a new opportunity can take up to 60 seconds to show, and the store keeps 500 entries.
-
 ## Cache-Control matches the server TTL
 
 A successful response is `public`, because nothing in it depends on who asked, and `max-age` is the same number of seconds the server keeps that answer. I didn't add a stale window on the header, for the same reason the server doesn't have one. Health and errors are `no-store`, so a liveness check or a 502 is never replayed from a browser cache.
@@ -126,10 +124,54 @@ The cost: tests depend on fixtures that can drift from the live API, so I record
 
 ## CI as one matrix
 
-I run the four checks as a matrix of parallel jobs instead of steps in one job. Each check shows up separately on the PR, and a lint error doesn't stop the tests from running.
+I run each check as its own job in a matrix instead of steps in one job. Each check shows up separately on the PR, and a lint error doesn't stop the tests from running. The web build is one of those jobs.
 
 ## Chakra UI only
 
 Chakra gives me components and styling in one tool. Adding Tailwind would mean two styling systems fighting each other.
 
-The cost: Chakra uses Emotion, which needs a bit of SSR setup.
+## React Router 8
+
+The web app uses React Router 8 in framework mode, with server rendering on. It is the current major, and loaders, middleware and client loaders work the way the hydration plan needs. Starting on v7 would mean adopting the previous major.
+
+## Client freshness matches the server
+
+A list or a detail stays fresh in the browser for 60 seconds, history for 5 minutes, and the filter lists for an hour. Those are the same lifetimes the API already uses. I didn't use 60 seconds for everything, because history and filters change more slowly and the browser would ask for them again while the server still has a fresh copy.
+
+## Dehydrate when the page is serialized
+
+Loaders on one request run at the same time, so the root loader cannot snapshot the cache while another loader is still fetching. The dehydrated state is read when React Router serializes the page, which is after every loader has finished. I didn't dehydrate at the end of the root loader function, because that runs too early.
+
+## The browser calls the API directly
+
+The server render and the browser both call the API at its own URL. I allow any origin, because the responses are public and the request sends no cookies. I didn't proxy the API through the web app, because a proxy on `/opportunities` would collide with the item page, and a proxy that exists only in dev would be missing when the production server runs.
+
+## Filters live in the address bar
+
+The filter controls read and write the page URL, and the loader parses that URL with the same schema as the API. I didn't keep the filters in component state, because a reload, a shared link and the back button would then disagree with the list.
+
+## An empty filter has a total of zero
+
+When nothing matches, Merkl's total TVL is null. I read that as zero, so the list comes back empty instead of as an error. I didn't reject the response, because an empty filter is a normal page.
+
+## An empty list is not an error
+
+When nothing matches, the page stays up and says so, with the filters still there. I didn't send that through the error boundary, because an empty filter is a normal result and the controls have to stay usable.
+
+## The explorer layout stays in Chakra
+
+The list design was written for Tailwind, Radix and a motion library. I drew it with Chakra, which the app already uses. I didn't add Tailwind, because two styling systems would fight. I didn't show a rewards total or a change since yesterday, because I would have had to invent them. I didn't make a row a link, because the item page is not built yet.
+
+## The next filter shows before the list
+
+I mark the clicked segment immediately. If that list is still fresh in the cache I show it at once. If it is not, I put skeletons in the rows until the loader finishes. I didn't leave the previous rows up under a filter I have not loaded, because they would look like they already belong to it.
+
+The cost: switching back after the minute is up shows skeletons again, because that copy is no longer fresh.
+
+## The time box is over
+
+The three hours are past, so I am cutting the polish. I will not add motion, prefetch on hover, or keepPreviousData. The list already selects a filter at once and shows skeletons only when that list is not fresh.
+
+I am keeping the item page, because the exercise asks for one. After it I will add one Playwright test: the first load does not call the API from the browser, and going back is served from the cache.
+
+The cost: there is no animation from the list to the item, and a stale list shows skeletons instead of the previous rows.
