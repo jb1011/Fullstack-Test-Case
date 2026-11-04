@@ -83,3 +83,29 @@ Tested: realistic examples parse, an opportunity without a protocol is accepted,
 Plain functions that turn what Merkl sends into what my API returns. They clean up Merkl's quirks in one place: empty icons and missing fields become `null`, campaign dates go from unix seconds to ISO, history goes from newest first in seconds to oldest first in milliseconds. The filters list sorts chains and protocols by name and hides the `INVALID` action.
 
 Tested: the real fixtures are mapped and every result is validated against the shared DTO schemas, so the mapper and the contract can't disagree. Unknown actions, malformed dates and missing fields are covered too.
+
+## 5.1 Add app factory, env config, logger, health route and error handler
+
+The API now runs. `createApp(deps)` builds the Express app from what it's given instead of creating things itself, so tests can pass in a silent logger now and a fake Merkl later. `index.ts` is the only file that reads the environment, starts listening and closes the server on Ctrl+C. Env variables are checked with Zod at startup and all have defaults, so `.env` is optional. Logs come from pino, pretty in dev and JSON elsewhere.
+
+Every error leaves as a problem body (RFC 7807, the same format Merkl uses): Merkl not found becomes 404, Merkl timing out 504, any other Merkl failure 502, and anything unexpected a bare 500 that's logged but never shows its message.
+
+Tested: Supertest calls the health route, an unknown route, and a route throwing each kind of error. MSW now lets local requests through so Supertest can reach the app, and I checked that a request to the real Merkl still fails. I also started the server and hit it with curl.
+
+## 5.2 Add query validation middleware
+
+`validateQuery(schema)` checks the query string before the route runs and answers 400 with a problem body naming every invalid field. It uses the opportunities schema from `shared`, so the defaults, the sorted lists and the blank values behave the same as they already do there. `createApp` takes the routers to mount and uses the extended query parser, because the default one keeps only the last value of a repeated key and `chain=1&chain=42161` would have dropped Ethereum.
+
+Tested: defaults, comma lists, repeated keys, blanks, an unknown parameter, a 400 that names both bad fields, a minimum TVL above the maximum, and a route that reads the query without the middleware (500, message hidden).
+
+## 5.3 Add opportunities routes
+
+The list, the detail and the history are real endpoints now. A route only checks the query, calls the opportunities service and sends the DTO. The service asks Merkl for the page, the count and the total TVL at the same time, then maps them. A missing opportunity, and one with an action I don't know, both come back as 404. A Merkl failure still becomes 502 or 504 through the error handler.
+
+Tested: Supertest against MSW. The list matches the shared schema and Merkl receives page 0 when I ask for page 2. An invalid query never reaches Merkl. An id that isn't a number is 400, an unknown numeric id and an unknown action are 404, and a Merkl 500 is 502. The history comes back oldest first.
+
+## 5.4 Add filters route
+
+`GET /filters` feeds the dropdowns. The service asks Merkl for chains and protocols at the same time, and the actions come from my own enum with `INVALID` left out, so the list doesn't depend on downloading every opportunity. Chains and protocols are sorted by name.
+
+Tested: the response matches the shared schema, protocols are requested with `items=500` and come back sorted even when Merkl sends them backwards, and a Merkl 500 becomes a 502 that hides the upstream message.

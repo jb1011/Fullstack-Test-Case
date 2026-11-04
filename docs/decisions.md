@@ -82,6 +82,18 @@ The query schema and Merkl's schemas still infer their types. The query schema t
 
 If Merkl starts sending an action or status I don't know, that opportunity is skipped from the list instead of failing the whole page. The detail mapper returns `null` for it, so the route can answer 404.
 
+## Extended query parser
+
+Express's default query parser keeps only the last value when a key is repeated, so `chain=1&chain=42161` would drop Ethereum and the request would still succeed. The extended parser keeps every value, which the schema already sorts and dedupes. Unknown parameters are ignored, so a tracking parameter doesn't fail the request.
+
+## HTTP stays in the routes
+
+The opportunities service returns `null` when Merkl has nothing, or when an opportunity uses an action or status I don't know. The route turns that into a 404. I didn't throw HTTP errors from the service, because the cache will wrap the service next and a cache shouldn't know about status codes.
+
+## Errors as problem details
+
+Every error has the same shape (RFC 7807: `type`, `title`, `status`, `detail`), so the web app has one thing to handle. Merkl failures become 502 or 504 because the problem is upstream, not in the request, and 404 stays 404. Merkl's own error messages and unexpected errors are logged but never sent, since they can leak internals.
+
 ## Faking Merkl with Mock Service Worker
 
 The client uses the real `fetch`, and MSW intercepts it in tests. That tests the actual URLs, headers and error handling, not a mock I wrote myself. Any request without a handler fails the test, so nothing can reach the real Merkl by accident.
@@ -91,8 +103,6 @@ The cost: tests depend on fixtures that can drift from the live API, so I record
 ## CI as one matrix
 
 I run the four checks as a matrix of parallel jobs instead of steps in one job. Each check shows up separately on the PR, and a lint error doesn't stop the tests from running.
-
-The cost: `npm ci` runs four times, but the npm cache keeps it fast.
 
 ## Chakra UI only
 
