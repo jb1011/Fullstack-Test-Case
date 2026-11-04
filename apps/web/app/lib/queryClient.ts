@@ -1,4 +1,9 @@
-import { dehydrate, QueryClient, type DehydratedState } from "@tanstack/react-query";
+import {
+  defaultShouldDehydrateQuery,
+  dehydrate,
+  QueryClient,
+  type DehydratedState,
+} from "@tanstack/react-query";
 import { createContext, type MiddlewareFunction, type RouterContextProvider } from "react-router";
 
 /**
@@ -47,7 +52,12 @@ export async function queryClientClientMiddleware(
 export function dehydratedLoaderData(queryClient: QueryClient) {
   return {
     get dehydratedState(): DehydratedState {
-      return dehydrate(queryClient);
+      // A query still in flight (the item page's history) is sent as a promise that React Router
+      // streams, so the browser waits for the server's answer instead of fetching it again.
+      return dehydrate(queryClient, {
+        shouldDehydrateQuery: (query) =>
+          defaultShouldDehydrateQuery(query) || query.state.status === "pending",
+      });
     },
   };
 }

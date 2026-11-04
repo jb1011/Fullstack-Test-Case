@@ -61,7 +61,7 @@ describe("query client", () => {
     expect(first.get(queryClientContext)).toBe(getBrowserQueryClient());
   });
 
-  it("includes a query that finishes after the loader data is created", async () => {
+  it("sends a query still in flight as a promise, then its data once it finishes", async () => {
     const context = new RouterContextProvider();
     await queryClientMiddleware(requestArgs(context), async () => {
       const queryClient = requireQueryClient(context);
@@ -72,10 +72,14 @@ describe("query client", () => {
       });
       const data = dehydratedLoaderData(queryClient);
 
-      expect(data.dehydratedState.queries).toHaveLength(0);
+      const inFlight = data.dehydratedState.queries;
+      expect(inFlight.map((query) => query.state.status)).toEqual(["pending"]);
+      expect(inFlight[0]?.promise).toBeInstanceOf(Promise);
       gate.resolve(filters);
       await loading;
-      expect(data.dehydratedState.queries.map((query) => query.queryKey)).toEqual([["filters"]]);
+      const done = data.dehydratedState.queries;
+      expect(done.map((query) => query.queryKey)).toEqual([["filters"]]);
+      expect(done.map((query) => query.state.status)).toEqual(["success"]);
 
       return new Response();
     });
