@@ -91,3 +91,9 @@ The API now runs. `createApp(deps)` builds the Express app from what it's given 
 Every error leaves as a problem body (RFC 7807, the same format Merkl uses): Merkl not found becomes 404, Merkl timing out 504, any other Merkl failure 502, and anything unexpected a bare 500 that's logged but never shows its message.
 
 Tested: Supertest calls the health route, an unknown route, and a route throwing each kind of error. MSW now lets local requests through so Supertest can reach the app, and I checked that a request to the real Merkl still fails. I also started the server and hit it with curl.
+
+## 5.2 Add query validation middleware
+
+`validateQuery(schema)` checks the query string before the route runs and answers 400 with a problem body naming every invalid field. It uses the opportunities schema from `shared`, so the defaults, the sorted lists and the blank values behave the same as they already do there. `createApp` takes the routers to mount and uses the extended query parser, because the default one keeps only the last value of a repeated key and `chain=1&chain=42161` would have dropped Ethereum.
+
+Tested: defaults, comma lists, repeated keys, blanks, an unknown parameter, a 400 that names both bad fields, a minimum TVL above the maximum, and a route that reads the query without the middleware (500, message hidden).

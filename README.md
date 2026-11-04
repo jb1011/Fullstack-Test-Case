@@ -57,7 +57,7 @@ Browser ──> apps/web (React Router SSR) ──> apps/api (Express) ──> a
 | GET    | `/filters`                   | Chains, protocols and actions for the filter controls        |
 | GET    | `/health`                    | Liveness                                                     |
 
-`GET /opportunities` accepts `chain`, `protocol`, `action`, `status` (comma separated lists), `minTvl`, `maxTvl`, `minApr`, `search`, `sort` (`apr`, `tvl`, `rewards`), `order`, `page` (from 1) and `pageSize` (up to 100). The schema lives in `packages/shared/src/query.ts`.
+`GET /opportunities` accepts `chain`, `protocol`, `action`, `status` (comma separated or repeated keys), `minTvl`, `maxTvl`, `minApr`, `search`, `sort` (`apr`, `tvl`, `rewards`), `order`, `page` (from 1) and `pageSize` (up to 100). The schema lives in `packages/shared/src/query.ts`. An invalid query gets a 400 naming the bad fields.
 
 Filtering always happens on Merkl's side: the Merkl client translates these into Merkl's own parameters (`chainId`, `mainProtocolId`, `minimumTvl`, ...) instead of downloading every opportunity and filtering locally. The list and the count (`/v4/opportunities/count`) are requested in parallel.
 
