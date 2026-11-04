@@ -199,3 +199,9 @@ Tested: the web typecheck passes.
 Each row now opens an opportunity page. The loader waits for the detail and prefetches the history, so the hero can show while the history is still loading. The hero shows the name, APR, TVL, daily rewards, chain, protocol, status and a deposit link when there is one. A missing opportunity is a 404. I put the latest history points in a table instead of a chart, because the page had to work and the chart can wait. A client error is not retried.
 
 Tested: the page renders the hero and the newest history first, the hero stays up while history is loading, the loader returns while history is still pending, a fresh detail is not fetched again, and an unknown id shows the 404 boundary.
+
+## 8.2 Lay out the opportunity page
+
+The opportunity page now follows the explorer detail. The name sits beside the current APR, with the chain, protocol, action and status as pills. TVL, daily rewards and the time left until the campaign ends sit under that. The history table stays on the left, and the deposit link and tokens sit on the right. I left out a campaign count, earn steps and a second link, because the API does not send them.
+
+Tested: the page shows the current APR, the pills, the time left, the deposit link and the tokens, and the history table is unchanged.

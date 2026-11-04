@@ -18,7 +18,7 @@ import { apiBaseUrl } from "../api/client";
 import { detail, history } from "../api/fixture";
 import { opportunityQueries } from "../api/queries";
 import { createEmotionCache } from "../lib/emotion";
-import { formatApr, formatTvl } from "../lib/format";
+import { formatApr, formatAprNumber, formatEndsIn, formatTvl } from "../lib/format";
 import {
   createQueryClient,
   dehydratedLoaderData,
@@ -46,6 +46,7 @@ const pageDetail = {
   ...detail,
   description: "Lend USDC",
   depositUrl: "https://app.merkl.xyz/opportunities/1",
+  endsAt: "2099-01-01T00:00:00.000Z",
 };
 
 const pageHistory = {
@@ -96,16 +97,20 @@ describe("Opportunity", () => {
     renderPage();
 
     expect(screen.getByRole("heading", { level: 1, name: "Supply USDC" })).toBeTruthy();
-    expect(screen.getByText("USDC")).toBeTruthy();
-    expect(screen.getByText("Aave")).toBeTruthy();
-    expect(screen.getByText("Ethereum")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "← Opportunities" }).getAttribute("href")).toBe("/");
+    expect(screen.getAllByText("USDC").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Aave").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Ethereum").length).toBeGreaterThan(0);
     expect(screen.getByText("Live")).toBeTruthy();
-    expect(screen.getByText("LEND")).toBeTruthy();
+    expect(screen.getByText("Lend")).toBeTruthy();
     expect(screen.getByText("Lend USDC")).toBeTruthy();
-    expect(screen.getByText(formatApr(pageDetail.apr))).toBeTruthy();
+    expect(screen.getByText("Current APR")).toBeTruthy();
+    expect(screen.getByText(formatAprNumber(pageDetail.apr))).toBeTruthy();
     expect(screen.getByText(formatTvl(pageDetail.tvl))).toBeTruthy();
-    expect(screen.getByText(`${formatTvl(pageDetail.dailyRewards)} /day`)).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Deposit" }).getAttribute("href")).toBe(
+    expect(screen.getByText(formatTvl(pageDetail.dailyRewards))).toBeTruthy();
+    expect(screen.getByText("Ends in")).toBeTruthy();
+    expect(screen.getByText(formatEndsIn(pageDetail.endsAt, Date.now()) ?? "")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Deposit on Aave" }).getAttribute("href")).toBe(
       pageDetail.depositUrl,
     );
 

@@ -108,7 +108,7 @@ Rejected alternatives:
 - **Filter state lives in the URL**, parsed with the shared Zod schema: SSR renders the right results, links are shareable and the back button works.
 - **Filters**: chain, protocol, action, status, minimum and maximum TVL, minimum APR, search, sort, pagination.
 - **List page**: a table of name, action, TVL, daily rewards and APR. Above it, the total TVL for the current filters (from the TVL aggregate) and how many opportunities match.
-- **Item page**: name, APR, TVL, daily rewards, chain, protocol and status, a deposit link when the opportunity has one, and a table of the latest APR and TVL points.
+- **Item page**: breadcrumb, name, current APR, chain, protocol, action and status, TVL, daily rewards, time left, description, a deposit link when the opportunity has one, tokens, and a table of the latest APR and TVL points. The chart comes next.
 
 ### Focus: making it feel instant
 
@@ -132,7 +132,7 @@ Every commit ships with unit tests:
 5. **API, routes** (done): a working API with validation and errors, tested with Supertest.
 6. **API, cache** (done): one TTL per entry, deduplication, LRU via `lru-cache`, `Cache-Control`, tested with an injected clock.
 7. **Web, SSR foundation and list page** (done): QueryClient middleware, hydration, filters in the URL.
-8. **Web, item page** (done): the detail is awaited, history is prefetched, each row links to the page, and a missing id is a 404. History is a table of the latest points. The chart is not built.
+8. **Web, item page**: the detail is awaited, history is prefetched, each row links to the page, and a missing id is a 404. The page is laid out like the explorer detail. The APR and TVL chart is next.
 9. **One Playwright test**: the first load does not call the API from the browser, and going back is served from the cache. Motion and keepPreviousData are cut.
 
 ## Documentation
