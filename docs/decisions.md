@@ -145,3 +145,9 @@ The cost: Node has to be 22.22 or newer.
 A list or a detail stays fresh in the browser for 60 seconds, history for 5 minutes, and the filter lists for an hour. Those are the same lifetimes the API already uses. I didn't use 60 seconds for everything, because history and filters change more slowly and the browser would ask for them again while the server still has a fresh copy.
 
 The cost: a filter dropdown can be up to an hour old.
+
+## Dehydrate when the page is serialized
+
+Loaders on one request run at the same time, so the root loader cannot snapshot the cache while another loader is still fetching. The dehydrated state is read when React Router serializes the page, which is after every loader has finished. I didn't dehydrate at the end of the root loader function, because that runs too early.
+
+The cost: reading that value before the other loaders finish would still snapshot too soon.

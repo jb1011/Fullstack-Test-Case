@@ -151,3 +151,9 @@ Tested: the home page renders its title, a server render of that page includes C
 The web app now has one client for my API, and one set of TanStack query factories. A list is keyed by the normalized query, so two requests that mean the same thing share a cache entry. A list or a detail stays fresh for 60 seconds, history for 5 minutes, and the filter lists for an hour, the same times the API keeps them. Nothing on the page calls this yet.
 
 Tested: the client sends the normalized query and parses the DTOs, a 404 comes back as the problem detail, a bad payload is rejected, and equivalent filters produce the same query key.
+
+## 7.3 Add per request QueryClient and hydration
+
+Each request gets its own QueryClient in middleware, so one render cannot see another request's data. The root loader hands that cache to the HTML after every loader on the request has finished, and the browser restores it into one client for the session. A URL that matches nothing never runs middleware, so that error page gets an empty client of its own. TanStack Query and React Router devtools are on while I am developing.
+
+Tested: two requests get different clients, a query that resolves after the loader data is created is still in the dehydrated state, and a hydrated `useQuery` renders that data without fetching again.

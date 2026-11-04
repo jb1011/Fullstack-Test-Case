@@ -1,6 +1,29 @@
 import { ChakraProvider, defaultSystem } from "@chakra-ui/react";
+import { HydrationBoundary } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
+import {
+  Links,
+  Meta,
+  Outlet,
+  Scripts,
+  ScrollRestoration,
+  useLoaderData,
+  type LoaderFunctionArgs,
+} from "react-router";
+
+import {
+  dehydratedLoaderData,
+  queryClientClientMiddleware,
+  queryClientMiddleware,
+  requireQueryClient,
+} from "./queryClient";
+
+export const middleware = [queryClientMiddleware];
+export const clientMiddleware = [queryClientClientMiddleware];
+
+export function loader({ context }: LoaderFunctionArgs) {
+  return dehydratedLoaderData(requireQueryClient(context));
+}
 
 export function Layout({ children }: { children: ReactNode }) {
   return (
@@ -23,5 +46,10 @@ export function Layout({ children }: { children: ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  const { dehydratedState } = useLoaderData<typeof loader>();
+  return (
+    <HydrationBoundary state={dehydratedState}>
+      <Outlet />
+    </HydrationBoundary>
+  );
 }

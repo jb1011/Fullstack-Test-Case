@@ -3,11 +3,13 @@ import { PassThrough, Transform } from "node:stream";
 import { createReadableStreamFromReadable } from "@react-router/node";
 import { CacheProvider } from "@emotion/react";
 import createEmotionServer from "@emotion/server/create-instance";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { isbot } from "isbot";
 import { renderToPipeableStream, type RenderToPipeableStreamOptions } from "react-dom/server";
 import { ServerRouter, type EntryContext, type RouterContextProvider } from "react-router";
 
 import { createEmotionCache } from "./emotion";
+import { createQueryClient, queryClientContext } from "./queryClient";
 
 export const streamTimeout = 5_000;
 
@@ -16,7 +18,7 @@ export default function handleRequest(
   responseStatusCode: number,
   responseHeaders: Headers,
   routerContext: EntryContext,
-  _loadContext: RouterContextProvider,
+  loadContext: RouterContextProvider,
 ) {
   if (request.method.toUpperCase() === "HEAD") {
     return new Response(null, {
@@ -31,16 +33,16 @@ export default function handleRequest(
     const readyOption: keyof RenderToPipeableStreamOptions =
       (userAgent && isbot(userAgent)) || routerContext.isSpaMode ? "onAllReady" : "onShellReady";
 
-    let timeoutId: ReturnType<typeof setTimeout> | undefined = setTimeout(() => {
-      abort();
-    }, streamTimeout + 1000);
-
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
     const cache = createEmotionCache();
     const emotion = createEmotionServer(cache);
+    const queryClient = loadContext.get(queryClientContext) ?? createQueryClient();
 
     const { pipe, abort } = renderToPipeableStream(
       <CacheProvider value={cache}>
-        <ServerRouter context={routerContext} url={request.url} />
+        <QueryClientProvider client={queryClient}>
+          <ServerRouter context={routerContext} url={request.url} />
+        </QueryClientProvider>
       </CacheProvider>,
       {
         [readyOption]() {
@@ -73,6 +75,7 @@ export default function handleRequest(
           );
         },
         onShellError(error: unknown) {
+          clearTimeout(timeoutId);
           reject(error instanceof Error ? error : new Error(String(error)));
         },
         onError(error: unknown) {
@@ -81,5 +84,9 @@ export default function handleRequest(
         },
       },
     );
+
+    timeoutId = setTimeout(() => {
+      abort();
+    }, streamTimeout + 1000);
   });
 }
