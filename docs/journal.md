@@ -71,3 +71,9 @@ Tested: MSW fakes Merkl and fails any request without a handler. The tests cover
 The rest of what the app needs from Merkl: APR and TVL history (one point per day, 90 days by default) for the item page chart, the total TVL of everything matching the filters for the list header, and chains and protocols for the filter dropdowns. Merkl has 247 protocols, so one request of up to 500 gets them all without paging.
 
 Tested: new fixtures recorded from real responses, tests for each method and the parameters it sends.
+
+## 4.3 Add response DTO schemas
+
+The shapes my API sends, in `shared` so the web app uses the same types. I designed them from the fixtures: a list row (name, chain, protocol, action, status, APR, TVL, daily rewards, tokens), the item page adds description, deposit link and campaign dates, and the list response carries the total count and total TVL so the header needs no extra request.
+
+Tested: realistic examples parse, an opportunity without a protocol is accepted, an unknown status and a non ISO date are rejected.
