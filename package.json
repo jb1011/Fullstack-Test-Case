@@ -1,0 +1,14 @@
+{
+  "name": "merkl",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "npm@10.9.4"
+}

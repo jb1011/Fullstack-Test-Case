@@ -143,4 +143,11 @@ Every commit ships with unit tests:
 
 ## Getting started
 
-Available once the scaffold lands (roadmap step 1).
+Prerequisites: Node 22 (see `.nvmrc`) and npm 10.
+
+```bash
+nvm use
+npm install
+```
+
+Run commands are added as the scaffold lands (roadmap step 1).
