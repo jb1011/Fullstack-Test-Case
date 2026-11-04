@@ -143,9 +143,11 @@ describe("Home", () => {
   });
 
   it("selects a segment before the list arrives", async () => {
-    let release = () => undefined;
+    let release: () => void = () => undefined;
     const gate = new Promise<void>((resolve) => {
-      release = resolve;
+      release = () => {
+        resolve();
+      };
     });
     const lendList = {
       ...list,
