@@ -127,6 +127,12 @@ describe("getTotalTvl", () => {
     expect(sent?.get("chainId")).toBe("1");
     expect(sent?.has("page")).toBe(false);
   });
+
+  it("treats a null sum as zero", async () => {
+    respond("/v4/opportunities/aggregate/tvl", () => HttpResponse.json({ sum: null }));
+
+    await expect(client.getTotalTvl(query)).resolves.toBe(0);
+  });
 });
 
 describe("filters", () => {

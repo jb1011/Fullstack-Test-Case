@@ -163,3 +163,9 @@ Tested: two requests get different clients, a query that resolves after the load
 The home page now shows the first page of live opportunities. The server loader fetches that page into the request cache, and the component reads it with `useQuery`. On a later visit in the browser, the client loader uses the same query, so a fresh list is not fetched again. The API allows any origin so the browser can read that response.
 
 Tested: the loader requests the default list once, a hydrated client loader does not request it again, the page renders the opportunity, and every API response allows any origin.
+
+## 7.5 Sync the filters with the URL
+
+The list now follows the query in the address. Chain, protocol, action, status, TVL, APR, search and sort are form controls, and the loader parses them with the shared schema before it fetches the page and the filter choices. Changing a filter starts again at page 1, and a fresh result is not fetched twice. Reset clears the address back to the default list. Merkl sends a null total when nothing matches, so I treat that as zero and the page stays empty instead of failing.
+
+Tested: a filtered URL is requested once and reused after hydration, choosing a chain writes that chain into the URL and loads that list, reset clears the address, and a null total becomes zero.

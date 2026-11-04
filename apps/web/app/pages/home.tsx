@@ -1,35 +1,57 @@
 import { Heading, Stack, Text } from "@chakra-ui/react";
-import { opportunitiesQuerySchema } from "@merkl/shared";
+import { serializeOpportunitiesQuery } from "@merkl/shared";
 import { useQuery } from "@tanstack/react-query";
-import type { ClientLoaderFunctionArgs, LoaderFunctionArgs } from "react-router";
+import {
+  useSearchParams,
+  type ClientLoaderFunctionArgs,
+  type LoaderFunctionArgs,
+} from "react-router";
 
 import { opportunityQueries } from "../api/queries";
 import { formatApr, formatTvl } from "../lib/format";
 import { requireQueryClient } from "../lib/queryClient";
+import { OpportunityFilters } from "./filters";
+import { queryFromRequest, queryFromSearch, withFilter } from "./search";
 
-export const firstPage = opportunitiesQuerySchema.parse({});
+const loadPage = ({ request, context }: LoaderFunctionArgs) => {
+  const query = queryFromRequest(request);
+  const client = requireQueryClient(context);
+  return Promise.all([
+    client.query(opportunityQueries.list(query)),
+    client.query(opportunityQueries.filters()),
+  ]).then(([page]) => page);
+};
 
-const listQuery = () => opportunityQueries.list(firstPage);
-
-const loadFirstPage = (context: LoaderFunctionArgs["context"]) =>
-  requireQueryClient(context).query(listQuery());
-
-export function loader({ context }: LoaderFunctionArgs) {
-  return loadFirstPage(context);
+export function loader(args: LoaderFunctionArgs) {
+  return loadPage(args);
 }
 
-export function clientLoader({ context }: ClientLoaderFunctionArgs) {
-  return loadFirstPage(context);
+export function clientLoader(args: ClientLoaderFunctionArgs) {
+  return loadPage(args);
 }
 
 export default function Home() {
-  const { data } = useQuery(listQuery());
+  const [searchParams, setSearchParams] = useSearchParams();
+  const query = queryFromSearch(searchParams.toString());
+  const { data } = useQuery(opportunityQueries.list(query));
+  const { data: filterOptions } = useQuery(opportunityQueries.filters());
 
   return (
     <Stack gap="6" padding="6">
       <Heading as="h1" size="xl">
         Opportunities
       </Heading>
+      <OpportunityFilters
+        query={query}
+        options={filterOptions}
+        onChange={(patch) => {
+          const next = serializeOpportunitiesQuery(withFilter(query, patch));
+          setSearchParams(new URLSearchParams(next));
+        }}
+        onReset={() => {
+          setSearchParams(new URLSearchParams());
+        }}
+      />
       <Stack gap="4" role="list">
         {data?.items.map((item) => (
           <Stack key={item.id} role="listitem" gap="1">

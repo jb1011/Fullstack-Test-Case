@@ -52,7 +52,7 @@ export const merklTvlRecordSchema = z.object({
 });
 
 export const merklAggregateSchema = z.object({
-  sum: z.number(),
+  sum: z.number().nullable(),
 });
 
 export type MerklToken = z.infer<typeof merklTokenSchema>;

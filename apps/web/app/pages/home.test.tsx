@@ -4,13 +4,18 @@ import { CacheProvider } from "@emotion/react";
 import { hydrate, QueryClientProvider } from "@tanstack/react-query";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { renderToString } from "react-dom/server";
-import { RouterContextProvider, type ClientLoaderFunctionArgs } from "react-router";
+import {
+  createMemoryRouter,
+  RouterContextProvider,
+  RouterProvider,
+  type ClientLoaderFunctionArgs,
+} from "react-router";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 
 import { apiBaseUrl } from "../api/client";
-import { list } from "../api/fixture";
+import { filters, list } from "../api/fixture";
 import { opportunityQueries } from "../api/queries";
 import { createEmotionCache } from "../lib/emotion";
 import {
@@ -20,7 +25,8 @@ import {
   queryClientMiddleware,
   requireQueryClient,
 } from "../lib/queryClient";
-import Home, { clientLoader, firstPage, loader } from "./home";
+import Home, { clientLoader, loader } from "./home";
+import { queryFromSearch } from "./search";
 
 const server = setupServer();
 
@@ -35,32 +41,37 @@ afterAll(() => {
   server.close();
 });
 
-const requestArgs = (context: RouterContextProvider) => ({
-  request: new Request("http://localhost/"),
-  url: new URL("http://localhost/"),
+const requestArgs = (context: RouterContextProvider, href = "http://localhost/") => ({
+  request: new Request(href),
+  url: new URL(href),
   params: {},
   pattern: "/",
   context,
 });
 
-const seededClient = () => {
+const seededClient = (search = "") => {
   const client = createQueryClient();
-  client.setQueryData(opportunityQueries.list(firstPage).queryKey, list);
+  client.setQueryData(opportunityQueries.list(queryFromSearch(search)).queryKey, list);
+  client.setQueryData(opportunityQueries.list(queryFromSearch("")).queryKey, list);
+  client.setQueryData(opportunityQueries.filters().queryKey, filters);
   return client;
 };
 
-const shell = (client = seededClient()) => {
+const shell = (path = "/") => {
+  const search = path.includes("?") ? path.slice(path.indexOf("?")) : "";
+  const client = seededClient(search);
+  const router = createMemoryRouter([{ path: "/", Component: Home }], { initialEntries: [path] });
   const cache = createEmotionCache();
   const tree = (
     <CacheProvider value={cache}>
       <QueryClientProvider client={client}>
         <ChakraProvider value={defaultSystem}>
-          <Home />
+          <RouterProvider router={router} />
         </ChakraProvider>
       </QueryClientProvider>
     </CacheProvider>
   );
-  return { cache, tree, client };
+  return { cache, tree, client, router };
 };
 
 describe("Home", () => {
@@ -87,26 +98,64 @@ describe("Home", () => {
     expect(html).toContain("Opportunities");
     expect(styles.styles.length).toBeGreaterThan(0);
   });
+
+  it("writes a chain filter into the URL and loads that list", async () => {
+    const filtered = {
+      ...list,
+      items: [{ ...list.items[0], name: "Supply ETH" }],
+    };
+    server.use(
+      http.get(`${apiBaseUrl}/opportunities`, ({ request }) => {
+        const search = new URL(request.url).search;
+        return HttpResponse.json(search === "?chain=1" ? filtered : list);
+      }),
+    );
+
+    const { tree, router } = shell("/?page=2");
+    render(tree);
+    fireEvent.change(screen.getByLabelText("Chain"), { target: { value: "1" } });
+
+    expect(router.state.location.search).toBe("?chain=1");
+    expect((await screen.findByRole("listitem")).textContent).toContain("Supply ETH");
+  });
+
+  it("clears every filter", () => {
+    const { tree, router } = shell("/?chain=1&search=usdc&page=2");
+    render(tree);
+
+    fireEvent.click(screen.getByRole("button", { name: "Reset" }));
+
+    expect(router.state.location.search).toBe("");
+    expect(screen.getByLabelText<HTMLSelectElement>("Chain").value).toBe("");
+    expect(screen.getByLabelText<HTMLInputElement>("Search").value).toBe("");
+  });
 });
 
 describe("list loaders", () => {
-  it("fetches the default list once and reuses it in the browser", async () => {
+  it("fetches the URL query once and reuses it in the browser", async () => {
     let hits = 0;
     let search = "";
+    let filterHits = 0;
     server.use(
       http.get(`${apiBaseUrl}/opportunities`, ({ request }) => {
         hits += 1;
         search = new URL(request.url).search;
         return HttpResponse.json(list);
       }),
+      http.get(`${apiBaseUrl}/filters`, () => {
+        filterHits += 1;
+        return HttpResponse.json(filters);
+      }),
     );
 
+    const href = "http://localhost/?page=2&chain=1";
     const serverContext = new RouterContextProvider();
-    await queryClientMiddleware(requestArgs(serverContext), async () => {
-      await loader(requestArgs(serverContext));
+    await queryClientMiddleware(requestArgs(serverContext, href), async () => {
+      await loader(requestArgs(serverContext, href));
       const dehydrated = dehydratedLoaderData(requireQueryClient(serverContext)).dehydratedState;
       expect(dehydrated.queries.map((query) => query.queryKey)).toEqual([
-        ["opportunities", "list", ""],
+        ["opportunities", "list", "chain=1&page=2"],
+        ["filters"],
       ]);
 
       const browserContext = new RouterContextProvider();
@@ -115,7 +164,7 @@ describe("list loaders", () => {
       hydrate(browserClient, dehydrated);
 
       const clientArgs: ClientLoaderFunctionArgs = {
-        ...requestArgs(browserContext),
+        ...requestArgs(browserContext, href),
         serverLoader: () => Promise.reject(new Error("The client loader called the server")),
       };
       await clientLoader(clientArgs);
@@ -123,6 +172,7 @@ describe("list loaders", () => {
     });
 
     expect(hits).toBe(1);
-    expect(search).toBe("");
+    expect(filterHits).toBe(1);
+    expect(search).toBe("?chain=1&page=2");
   });
 });

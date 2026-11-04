@@ -100,7 +100,7 @@ export function createMerklClient({ baseUrl, timeoutMs = 5_000 }: MerklClientOpt
         merklAggregateSchema,
         toMerklFilterParams(query),
       );
-      return sum;
+      return sum ?? 0;
     },
 
     listChains: () => request("/v4/chains", z.array(merklChainSchema)),

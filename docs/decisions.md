@@ -147,3 +147,11 @@ Loaders on one request run at the same time, so the root loader cannot snapshot 
 ## The browser calls the API directly
 
 The server render and the browser both call the API at its own URL. I allow any origin, because the responses are public and the request sends no cookies. I didn't proxy the API through the web app, because a proxy on `/opportunities` would collide with the item page, and a proxy that exists only in dev would be missing when the production server runs.
+
+## Filters live in the address bar
+
+The filter controls read and write the page URL, and the loader parses that URL with the same schema as the API. I didn't keep the filters in component state, because a reload, a shared link and the back button would then disagree with the list.
+
+## An empty filter has a total of zero
+
+When nothing matches, Merkl's total TVL is null. I read that as zero, so the list comes back empty instead of as an error. I didn't reject the response, because an empty filter is a normal page.
