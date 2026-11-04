@@ -12,6 +12,7 @@ describe("createApp", () => {
 
     expect(response.status).toBe(200);
     expect(response.headers["cache-control"]).toBe("no-store");
+    expect(response.headers["access-control-allow-origin"]).toBe("*");
     expect(response.body).toEqual({ status: "ok" });
   });
 
@@ -20,6 +21,7 @@ describe("createApp", () => {
 
     expect(response.status).toBe(404);
     expect(response.headers["cache-control"]).toBe("no-store");
+    expect(response.headers["access-control-allow-origin"]).toBe("*");
     expect(response.type).toBe("application/problem+json");
     expect(response.body).toEqual({
       type: "about:blank",
@@ -27,6 +29,14 @@ describe("createApp", () => {
       status: 404,
       detail: "No route for GET /nope",
     });
+  });
+
+  it("answers a preflight from any origin", async () => {
+    const response = await request(app).options("/opportunities");
+
+    expect(response.status).toBe(204);
+    expect(response.headers["access-control-allow-origin"]).toBe("*");
+    expect(response.headers["access-control-allow-methods"]).toContain("GET");
   });
 
   it("doesn't advertise Express", async () => {

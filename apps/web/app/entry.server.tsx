@@ -8,8 +8,8 @@ import { isbot } from "isbot";
 import { renderToPipeableStream, type RenderToPipeableStreamOptions } from "react-dom/server";
 import { ServerRouter, type EntryContext, type RouterContextProvider } from "react-router";
 
-import { createEmotionCache } from "./emotion";
-import { createQueryClient, queryClientContext } from "./queryClient";
+import { createEmotionCache } from "./lib/emotion";
+import { createQueryClient, queryClientContext } from "./lib/queryClient";
 
 export const streamTimeout = 5_000;
 

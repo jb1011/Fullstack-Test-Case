@@ -132,22 +132,18 @@ I run each check as its own job in a matrix instead of steps in one job. Each ch
 
 Chakra gives me components and styling in one tool. Adding Tailwind would mean two styling systems fighting each other.
 
-The cost: Chakra uses Emotion, which needs a bit of SSR setup.
-
 ## React Router 8
 
 The web app uses React Router 8 in framework mode, with server rendering on. It is the current major, and loaders, middleware and client loaders work the way the hydration plan needs. Starting on v7 would mean adopting the previous major.
-
-The cost: Node has to be 22.22 or newer.
 
 ## Client freshness matches the server
 
 A list or a detail stays fresh in the browser for 60 seconds, history for 5 minutes, and the filter lists for an hour. Those are the same lifetimes the API already uses. I didn't use 60 seconds for everything, because history and filters change more slowly and the browser would ask for them again while the server still has a fresh copy.
 
-The cost: a filter dropdown can be up to an hour old.
-
 ## Dehydrate when the page is serialized
 
 Loaders on one request run at the same time, so the root loader cannot snapshot the cache while another loader is still fetching. The dehydrated state is read when React Router serializes the page, which is after every loader has finished. I didn't dehydrate at the end of the root loader function, because that runs too early.
 
-The cost: reading that value before the other loaders finish would still snapshot too soon.
+## The browser calls the API directly
+
+The server render and the browser both call the API at its own URL. I allow any origin, because the responses are public and the request sends no cookies. I didn't proxy the API through the web app, because a proxy on `/opportunities` would collide with the item page, and a proxy that exists only in dev would be missing when the production server runs.

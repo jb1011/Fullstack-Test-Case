@@ -5,8 +5,8 @@ import { startTransition, StrictMode } from "react";
 import { hydrateRoot } from "react-dom/client";
 import { HydratedRouter } from "react-router/dom";
 
-import { createEmotionCache } from "./emotion";
-import { getBrowserQueryClient } from "./queryClient";
+import { createEmotionCache } from "./lib/emotion";
+import { getBrowserQueryClient } from "./lib/queryClient";
 
 const cache = createEmotionCache();
 

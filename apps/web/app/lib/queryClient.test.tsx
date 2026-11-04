@@ -3,8 +3,8 @@ import { render, screen } from "@testing-library/react";
 import { RouterContextProvider } from "react-router";
 import { describe, expect, it } from "vitest";
 
-import { filters } from "./api/fixture";
-import { opportunityQueries } from "./api/queries";
+import { filters } from "../api/fixture";
+import { opportunityQueries } from "../api/queries";
 import {
   createQueryClient,
   dehydratedLoaderData,

@@ -157,3 +157,9 @@ Tested: the client sends the normalized query and parses the DTOs, a 404 comes b
 Each request gets its own QueryClient in middleware, so one render cannot see another request's data. The root loader hands that cache to the HTML after every loader on the request has finished, and the browser restores it into one client for the session. A URL that matches nothing never runs middleware, so that error page gets an empty client of its own. TanStack Query and React Router devtools are on while I am developing.
 
 Tested: two requests get different clients, a query that resolves after the loader data is created is still in the dehydrated state, and a hydrated `useQuery` renders that data without fetching again.
+
+## 7.4 Add the list page with a loader and a client loader
+
+The home page now shows the first page of live opportunities. The server loader fetches that page into the request cache, and the component reads it with `useQuery`. On a later visit in the browser, the client loader uses the same query, so a fresh list is not fetched again. The API allows any origin so the browser can read that response.
+
+Tested: the loader requests the default list once, a hydrated client loader does not request it again, the page renders the opportunity, and every API response allows any origin.

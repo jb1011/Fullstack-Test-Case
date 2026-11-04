@@ -16,7 +16,7 @@ import {
   queryClientClientMiddleware,
   queryClientMiddleware,
   requireQueryClient,
-} from "./queryClient";
+} from "./lib/queryClient";
 
 export const middleware = [queryClientMiddleware];
 export const clientMiddleware = [queryClientClientMiddleware];

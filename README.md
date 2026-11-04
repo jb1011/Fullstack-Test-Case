@@ -87,7 +87,7 @@ There are two layers with two different jobs.
 
 ### Client cache (makes navigation instant)
 
-TanStack Query keeps data per user, so going back to a list or reopening an item renders instantly. A list or a detail stays fresh for 60 seconds, history for 5 minutes, and the filter lists for an hour, matching the API cache. The web app calls the API at `http://localhost:4000` unless `VITE_API_URL` is set.
+TanStack Query keeps data per user, so going back to a list or reopening an item renders instantly. A list or a detail stays fresh for 60 seconds, history for 5 minutes, and the filter lists for an hour, matching the API cache. The web app calls the API at `http://localhost:4000` unless `VITE_API_URL` is set. The first load goes through the server render. When that copy is stale, the browser calls the API directly. The API allows any origin, because the data is public and the request sends no cookies.
 
 ## SSR and hydration
 
