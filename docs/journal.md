@@ -223,3 +223,7 @@ Tested: a query that is still running is in the dehydrated state as a promise, t
 The link prefetch only downloaded the page code. A page with a client loader does not prefetch its data that way, so opening a row still called the API. Hovering or focusing a row now loads the detail and the history into the browser cache. Opening that row then makes no request, and a second hover while the entries are fresh does not call again.
 
 Tested: hover loads one row, focus loads another, and reading either query again does not fetch.
+
+## 8.6 Keep one decimal on compact dollars
+
+Node 24 drops a trailing zero in compact currency, so one thousand dollars prints as $1K instead of $1.0K. I set the minimum fraction digits to 1, the same as the maximum, so both Node versions print the same amount. I did not limit the project to Node 22, because anyone on Node 24 would still see the failures.

@@ -4,6 +4,7 @@ const dollars = new Intl.NumberFormat("en", {
   style: "currency",
   currency: "USD",
   notation: "compact",
+  minimumFractionDigits: 1,
   maximumFractionDigits: 1,
 });
 
