@@ -166,12 +166,12 @@ The list design was written for Tailwind, Radix and a motion library. I drew it 
 
 I mark the clicked segment immediately. If that list is still fresh in the cache I show it at once. If it is not, I put skeletons in the rows until the loader finishes. I didn't leave the previous rows up under a filter I have not loaded, because they would look like they already belong to it.
 
-The cost: switching back after the minute is up shows skeletons again, because that copy is no longer fresh.
-
 ## The time box is over
 
 The three hours are past, so I am cutting the polish. I will not add motion, prefetch on hover, or keepPreviousData. The list already selects a filter at once and shows skeletons only when that list is not fresh.
 
 I am keeping the item page, because the exercise asks for one. After it I will add one Playwright test: the first load does not call the API from the browser, and going back is served from the cache.
 
-The cost: there is no animation from the list to the item, and a stale list shows skeletons instead of the previous rows.
+## The item page shows recent history in a table
+
+The exercise asks for an item page, so each row links to one. The loader waits for the opportunity and starts the history without waiting, so the hero can paint while those points are still on the way. Hovering a row prefetches that page. I did not draw a chart, because a working page matters more than a half finished one, and the recent APR and TVL already come from the history.

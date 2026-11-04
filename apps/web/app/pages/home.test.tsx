@@ -103,6 +103,9 @@ describe("Home", () => {
 
     const row = screen.getByRole("listitem");
     expect(row.textContent).toContain("Supply USDC");
+    expect(screen.getByRole("link", { name: /Supply USDC/ }).getAttribute("href")).toBe(
+      "/opportunities/1",
+    );
     expect(row.textContent).toContain("Ethereum");
     expect(row.textContent).toContain("Aave");
     expect(row.textContent).toContain("USDC");

@@ -193,3 +193,9 @@ Tested: a chain filter still writes the URL and loads that list, reset clears th
 The test that holds a list until I release it was assigning the promise resolve directly. Typecheck rejects that, because that function does not return undefined. It now calls resolve from a function with the right type.
 
 Tested: the web typecheck passes.
+
+## 8.1 Add the opportunity page
+
+Each row now opens an opportunity page. The loader waits for the detail and prefetches the history, so the hero can show while the history is still loading. The hero shows the name, APR, TVL, daily rewards, chain, protocol, status and a deposit link when there is one. A missing opportunity is a 404. I put the latest history points in a table instead of a chart, because the page had to work and the chart can wait. A client error is not retried.
+
+Tested: the page renders the hero and the newest history first, the hero stays up while history is loading, the loader returns while history is still pending, a fresh detail is not fetched again, and an unknown id shows the 404 boundary.

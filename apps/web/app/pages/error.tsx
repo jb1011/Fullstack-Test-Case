@@ -40,3 +40,46 @@ export function ListErrorBoundary() {
     </Stack>
   );
 }
+
+const opportunityMessage = (error: unknown) => {
+  if (isRouteErrorResponse(error) && typeof error.data === "string" && error.data)
+    return error.data;
+  if (isRouteErrorResponse(error) && error.status === 404)
+    return "This opportunity does not exist.";
+  return "The opportunity could not be loaded.";
+};
+
+export function OpportunityErrorBoundary() {
+  const error = useRouteError();
+  const navigate = useNavigate();
+  const { revalidate } = useRevalidator();
+  const missing = isRouteErrorResponse(error) && error.status === 404;
+
+  return (
+    <Stack gap="4" padding="6">
+      <Heading as="h1" size="xl">
+        {missing ? "Opportunity not found" : "Something went wrong"}
+      </Heading>
+      <Text>{opportunityMessage(error)}</Text>
+      <Stack direction="row" gap="3">
+        {missing ? null : (
+          <Button
+            onClick={() => {
+              void revalidate();
+            }}
+          >
+            Try again
+          </Button>
+        )}
+        <Button
+          variant="outline"
+          onClick={() => {
+            void navigate("/");
+          }}
+        >
+          Opportunities
+        </Button>
+      </Stack>
+    </Stack>
+  );
+}

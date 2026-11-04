@@ -2,7 +2,7 @@ import type { OpportunitiesQuery } from "@merkl/shared";
 import { serializeOpportunitiesQuery } from "@merkl/shared";
 import { queryOptions } from "@tanstack/react-query";
 
-import { api, type ApiClient } from "./client";
+import { api, ApiError, type ApiClient } from "./client";
 
 const MINUTE = 60_000;
 
@@ -13,6 +13,8 @@ export const FILTERS_STALE_MS = 60 * MINUTE;
 const freshFor = (staleTime: number) => ({
   staleTime,
   gcTime: Math.max(staleTime, 5 * MINUTE),
+  retry: (failureCount: number, error: Error) =>
+    error instanceof ApiError && error.status < 500 ? false : failureCount < 3,
 });
 
 export function createOpportunityQueries(client: ApiClient) {
