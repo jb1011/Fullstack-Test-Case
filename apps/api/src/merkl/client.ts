@@ -3,7 +3,19 @@ import { z } from "zod";
 
 import { MerklError } from "./errors";
 import { toMerklFilterParams, toMerklListParams } from "./params";
-import { merklOpportunitySchema } from "./schemas";
+import {
+  merklAggregateSchema,
+  merklAprRecordSchema,
+  merklChainSchema,
+  merklOpportunitySchema,
+  merklProtocolSchema,
+  merklTvlRecordSchema,
+} from "./schemas";
+
+const MAX_PROTOCOLS_PER_PAGE = 500;
+
+const opportunityPath = (id: string) => `/v4/opportunities/${encodeURIComponent(id)}`;
+const lastDays = (days: number) => new URLSearchParams({ grain: "DAY", items: String(days) });
 
 export interface MerklClientOptions {
   baseUrl: string;
@@ -74,8 +86,31 @@ export function createMerklClient({ baseUrl, timeoutMs = 5_000 }: MerklClientOpt
         toMerklFilterParams(query),
       ),
 
-    getOpportunity: (id: string) =>
-      request(`/v4/opportunities/${encodeURIComponent(id)}`, merklOpportunitySchema),
+    getOpportunity: (id: string) => request(opportunityPath(id), merklOpportunitySchema),
+
+    getAprRecords: (id: string, days = 90) =>
+      request(`${opportunityPath(id)}/apr-records`, z.array(merklAprRecordSchema), lastDays(days)),
+
+    getTvlRecords: (id: string, days = 90) =>
+      request(`${opportunityPath(id)}/tvl-records`, z.array(merklTvlRecordSchema), lastDays(days)),
+
+    getTotalTvl: async (query: OpportunitiesQuery) => {
+      const { sum } = await request(
+        "/v4/opportunities/aggregate/tvl",
+        merklAggregateSchema,
+        toMerklFilterParams(query),
+      );
+      return sum;
+    },
+
+    listChains: () => request("/v4/chains", z.array(merklChainSchema)),
+
+    listProtocols: () =>
+      request(
+        "/v4/protocols",
+        z.array(merklProtocolSchema),
+        new URLSearchParams({ items: String(MAX_PROTOCOLS_PER_PAGE) }),
+      ),
   };
 }
 

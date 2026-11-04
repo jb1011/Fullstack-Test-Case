@@ -41,5 +41,23 @@ export const merklOpportunitySchema = z.object({
   latestCampaignEnd: z.string().optional(),
 });
 
+export const merklAprRecordSchema = z.object({
+  timestamp: z.string(),
+  apr: z.number(),
+});
+
+export const merklTvlRecordSchema = z.object({
+  timestamp: z.string(),
+  total: z.number(),
+});
+
+export const merklAggregateSchema = z.object({
+  sum: z.number(),
+});
+
 export type MerklToken = z.infer<typeof merklTokenSchema>;
+export type MerklChain = z.infer<typeof merklChainSchema>;
+export type MerklProtocol = z.infer<typeof merklProtocolSchema>;
 export type MerklOpportunity = z.infer<typeof merklOpportunitySchema>;
+export type MerklAprRecord = z.infer<typeof merklAprRecordSchema>;
+export type MerklTvlRecord = z.infer<typeof merklTvlRecordSchema>;

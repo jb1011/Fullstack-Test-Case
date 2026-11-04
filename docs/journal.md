@@ -65,3 +65,9 @@ A small client for Merkl's list, count and detail endpoints. It translates my qu
 Before writing the schema I checked 618 live opportunities: 96 have no protocol and many have no deposit URL or campaign dates, so those fields are optional. The test fixtures are real Merkl responses, including one without a protocol.
 
 Tested: MSW fakes Merkl and fails any request without a handler. The tests cover the translated parameters, parsing, and every error kind including the timeout. I also ran the client once against the real API: 618 opportunities parsed without error.
+
+## 4.2 Add Merkl client for history and filters
+
+The rest of what the app needs from Merkl: APR and TVL history (one point per day, 90 days by default) for the item page chart, the total TVL of everything matching the filters for the list header, and chains and protocols for the filter dropdowns. Merkl has 247 protocols, so one request of up to 500 gets them all without paging.
+
+Tested: new fixtures recorded from real responses, tests for each method and the parameters it sends.
