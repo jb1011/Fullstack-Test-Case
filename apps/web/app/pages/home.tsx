@@ -11,7 +11,8 @@ import { opportunityQueries } from "../api/queries";
 import { formatApr, formatTvl } from "../lib/format";
 import { requireQueryClient } from "../lib/queryClient";
 import { OpportunityFilters } from "./filters";
-import { queryFromRequest, queryFromSearch, withFilter } from "./search";
+import { Pagination } from "./pagination";
+import { queryFromRequest, queryFromSearch, withFilter, withPage } from "./search";
 
 const loadPage = ({ request, context }: LoaderFunctionArgs) => {
   const query = queryFromRequest(request);
@@ -38,9 +39,12 @@ export default function Home() {
 
   return (
     <Stack gap="6" padding="6">
-      <Heading as="h1" size="xl">
-        Opportunities
-      </Heading>
+      <Stack gap="1">
+        <Heading as="h1" size="xl">
+          Opportunities
+        </Heading>
+        {data ? <Text color="fg.muted">Total TVL {formatTvl(data.totalTvl)}</Text> : null}
+      </Stack>
       <OpportunityFilters
         query={query}
         options={filterOptions}
@@ -81,6 +85,17 @@ export default function Home() {
           </Stack>
         ))}
       </Stack>
+      {data ? (
+        <Pagination
+          page={query.page}
+          pageSize={query.pageSize}
+          total={data.total}
+          onPage={(page) => {
+            const next = serializeOpportunitiesQuery(withPage(query, page));
+            setSearchParams(new URLSearchParams(next));
+          }}
+        />
+      ) : null}
     </Stack>
   );
 }

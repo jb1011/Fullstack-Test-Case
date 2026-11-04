@@ -1,4 +1,5 @@
 import { ChakraProvider, defaultSystem } from "@chakra-ui/react";
+import type { OpportunityList } from "@merkl/shared";
 import createEmotionServer from "@emotion/server/create-instance";
 import { CacheProvider } from "@emotion/react";
 import { hydrate, QueryClientProvider } from "@tanstack/react-query";
@@ -15,7 +16,7 @@ import {
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 
 import { apiBaseUrl } from "../api/client";
-import { filters, list } from "../api/fixture";
+import { filters, list, summary } from "../api/fixture";
 import { opportunityQueries } from "../api/queries";
 import { createEmotionCache } from "../lib/emotion";
 import {
@@ -49,17 +50,17 @@ const requestArgs = (context: RouterContextProvider, href = "http://localhost/")
   context,
 });
 
-const seededClient = (search = "") => {
+const seededClient = (search = "", current: OpportunityList = list) => {
   const client = createQueryClient();
-  client.setQueryData(opportunityQueries.list(queryFromSearch(search)).queryKey, list);
   client.setQueryData(opportunityQueries.list(queryFromSearch("")).queryKey, list);
+  client.setQueryData(opportunityQueries.list(queryFromSearch(search)).queryKey, current);
   client.setQueryData(opportunityQueries.filters().queryKey, filters);
   return client;
 };
 
-const shell = (path = "/") => {
+const shell = (path = "/", current: OpportunityList = list) => {
   const search = path.includes("?") ? path.slice(path.indexOf("?")) : "";
-  const client = seededClient(search);
+  const client = seededClient(search, current);
   const router = createMemoryRouter([{ path: "/", Component: Home }], { initialEntries: [path] });
   const cache = createEmotionCache();
   const tree = (
@@ -128,6 +129,32 @@ describe("Home", () => {
     expect(router.state.location.search).toBe("");
     expect(screen.getByLabelText<HTMLSelectElement>("Chain").value).toBe("");
     expect(screen.getByLabelText<HTMLInputElement>("Search").value).toBe("");
+  });
+
+  it("shows the filtered total and opens the next page", async () => {
+    const first = { ...list, total: 40, totalTvl: 2_000_000 };
+    const second = {
+      ...first,
+      page: 2,
+      items: [{ ...summary, id: "2", name: "Page two" }],
+    };
+    server.use(
+      http.get(`${apiBaseUrl}/opportunities`, ({ request }) => {
+        const search = new URL(request.url).search;
+        return HttpResponse.json(search === "?chain=1&page=2" ? second : first);
+      }),
+    );
+
+    const { tree, router } = shell("/?chain=1", first);
+    render(tree);
+
+    expect(screen.getByText("Total TVL $2.0M")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Previous" }).hasAttribute("disabled")).toBe(true);
+
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+
+    expect(router.state.location.search).toBe("?chain=1&page=2");
+    expect((await screen.findByRole("listitem")).textContent).toContain("Page two");
   });
 });
 

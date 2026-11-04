@@ -25,3 +25,6 @@ export const withFilter = (
   query: OpportunitiesQuery,
   patch: Partial<Record<keyof OpportunitiesQuery, unknown>>,
 ) => opportunitiesQuerySchema.parse({ ...query, ...patch, page: 1 });
+
+export const withPage = (query: OpportunitiesQuery, page: number) =>
+  opportunitiesQuerySchema.parse({ ...query, page });

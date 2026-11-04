@@ -1,7 +1,7 @@
 import { opportunitiesQuerySchema, serializeOpportunitiesQuery } from "@merkl/shared";
 import { describe, expect, it } from "vitest";
 
-import { queryFromSearch, withFilter } from "./search";
+import { queryFromSearch, withFilter, withPage } from "./search";
 
 describe("queryFromSearch", () => {
   it("reads a repeated key as one list", () => {
@@ -26,5 +26,14 @@ describe("withFilter", () => {
     const next = withFilter(current, { chain: [1], search: "usdc" });
 
     expect(serializeOpportunitiesQuery(next)).toBe("chain=1&search=usdc");
+  });
+});
+
+describe("withPage", () => {
+  it("keeps the filters when the page changes", () => {
+    const current = opportunitiesQuerySchema.parse({ chain: "1", page: "2" });
+
+    expect(serializeOpportunitiesQuery(withPage(current, 3))).toBe("chain=1&page=3");
+    expect(serializeOpportunitiesQuery(withPage(current, 1))).toBe("chain=1");
   });
 });

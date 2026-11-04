@@ -169,3 +169,9 @@ Tested: the loader requests the default list once, a hydrated client loader does
 The list now follows the query in the address. Chain, protocol, action, status, TVL, APR, search and sort are form controls, and the loader parses them with the shared schema before it fetches the page and the filter choices. Changing a filter starts again at page 1, and a fresh result is not fetched twice. Reset clears the address back to the default list. Merkl sends a null total when nothing matches, so I treat that as zero and the page stays empty instead of failing.
 
 Tested: a filtered URL is requested once and reused after hydration, choosing a chain writes that chain into the URL and loads that list, reset clears the address, and a null total becomes zero.
+
+## 7.6 Add pagination and a total TVL header
+
+The header shows the total TVL of everything matching the filters, which is already part of the list response, so it does not take another request. Previous and next write the page into the address and leave the other filters alone. The first and last pages stop there.
+
+Tested: the header shows the total from the list, and next keeps the chain filter while loading page 2.
