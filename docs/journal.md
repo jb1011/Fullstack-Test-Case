@@ -145,3 +145,9 @@ Tested: the list and the detail send `max-age=60`, history sends `300`, filters 
 The web app is React Router 8 with server rendering, styled with Chakra. The server pulls Emotion styles into the HTML stream, so the first paint already has CSS. `npm run dev` starts it beside the API, and CI builds the app along with the other checks.
 
 Tested: the home page renders its title, a server render of that page includes Chakra styles, and `npm run build` completes.
+
+## 7.2 Add the API client and query factories
+
+The web app now has one client for my API, and one set of TanStack query factories. A list is keyed by the normalized query, so two requests that mean the same thing share a cache entry. A list or a detail stays fresh for 60 seconds, history for 5 minutes, and the filter lists for an hour, the same times the API keeps them. Nothing on the page calls this yet.
+
+Tested: the client sends the normalized query and parses the DTOs, a 404 comes back as the problem detail, a bad payload is rejected, and equivalent filters produce the same query key.

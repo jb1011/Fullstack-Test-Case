@@ -87,7 +87,7 @@ There are two layers with two different jobs.
 
 ### Client cache (makes navigation instant)
 
-TanStack Query keeps data per user, so going back to a list or reopening an item renders instantly.
+TanStack Query keeps data per user, so going back to a list or reopening an item renders instantly. A list or a detail stays fresh for 60 seconds, history for 5 minutes, and the filter lists for an hour, matching the API cache. The web app calls the API at `http://localhost:4000` unless `VITE_API_URL` is set.
 
 ## SSR and hydration
 
@@ -98,7 +98,7 @@ React Router loaders and TanStack Query both want to own the data. I use the pat
 3. **`clientLoader` with `ensureQueryData`**: without it, React Router would call the server loader on every client navigation and bypass the TanStack cache.
 4. **Streaming secondary data**: on the item page the opportunity is awaited (critical for first paint and SEO), while the history is prefetched without awaiting and the chart streams in behind a Suspense skeleton.
 5. **`queryOptions` factories in one file**, shared by loaders, client loaders and components, so query keys can never drift apart.
-6. **`staleTime` above zero (about 60 s)**, otherwise the client would refetch right after hydration and waste the server fetch.
+6. **`staleTime` above zero**, otherwise the client would refetch right after hydration and waste the server fetch. The times match the API cache.
 
 Rejected alternatives:
 

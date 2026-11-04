@@ -139,3 +139,9 @@ The cost: Chakra uses Emotion, which needs a bit of SSR setup.
 The web app uses React Router 8 in framework mode, with server rendering on. It is the current major, and loaders, middleware and client loaders work the way the hydration plan needs. Starting on v7 would mean adopting the previous major.
 
 The cost: Node has to be 22.22 or newer.
+
+## Client freshness matches the server
+
+A list or a detail stays fresh in the browser for 60 seconds, history for 5 minutes, and the filter lists for an hour. Those are the same lifetimes the API already uses. I didn't use 60 seconds for everything, because history and filters change more slowly and the browser would ask for them again while the server still has a fresh copy.
+
+The cost: a filter dropdown can be up to an hour old.
