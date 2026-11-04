@@ -97,3 +97,9 @@ Tested: Supertest calls the health route, an unknown route, and a route throwing
 `validateQuery(schema)` checks the query string before the route runs and answers 400 with a problem body naming every invalid field. It uses the opportunities schema from `shared`, so the defaults, the sorted lists and the blank values behave the same as they already do there. `createApp` takes the routers to mount and uses the extended query parser, because the default one keeps only the last value of a repeated key and `chain=1&chain=42161` would have dropped Ethereum.
 
 Tested: defaults, comma lists, repeated keys, blanks, an unknown parameter, a 400 that names both bad fields, a minimum TVL above the maximum, and a route that reads the query without the middleware (500, message hidden).
+
+## 5.3 Add opportunities routes
+
+The list, the detail and the history are real endpoints now. A route only checks the query, calls the opportunities service and sends the DTO. The service asks Merkl for the page, the count and the total TVL at the same time, then maps them. A missing opportunity, and one with an action I don't know, both come back as 404. A Merkl failure still becomes 502 or 504 through the error handler.
+
+Tested: Supertest against MSW. The list matches the shared schema and Merkl receives page 0 when I ask for page 2. An invalid query never reaches Merkl. An id that isn't a number is 400, an unknown numeric id and an unknown action are 404, and a Merkl 500 is 502. The history comes back oldest first.

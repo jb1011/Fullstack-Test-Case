@@ -86,7 +86,9 @@ If Merkl starts sending an action or status I don't know, that opportunity is sk
 
 Express's default query parser keeps only the last value when a key is repeated, so `chain=1&chain=42161` would drop Ethereum and the request would still succeed. The extended parser keeps every value, which the schema already sorts and dedupes. Unknown parameters are ignored, so a tracking parameter doesn't fail the request.
 
-The cost: bracket notation gets parsed too, but the schema drops anything it doesn't declare.
+## HTTP stays in the routes
+
+The opportunities service returns `null` when Merkl has nothing, or when an opportunity uses an action or status I don't know. The route turns that into a 404. I didn't throw HTTP errors from the service, because the cache will wrap the service next and a cache shouldn't know about status codes.
 
 ## Errors as problem details
 
@@ -101,8 +103,6 @@ The cost: tests depend on fixtures that can drift from the live API, so I record
 ## CI as one matrix
 
 I run the four checks as a matrix of parallel jobs instead of steps in one job. Each check shows up separately on the PR, and a lint error doesn't stop the tests from running.
-
-The cost: `npm ci` runs four times, but the npm cache keeps it fast.
 
 ## Chakra UI only
 

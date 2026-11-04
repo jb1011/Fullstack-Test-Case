@@ -59,7 +59,7 @@ Browser ──> apps/web (React Router SSR) ──> apps/api (Express) ──> a
 
 `GET /opportunities` accepts `chain`, `protocol`, `action`, `status` (comma separated or repeated keys), `minTvl`, `maxTvl`, `minApr`, `search`, `sort` (`apr`, `tvl`, `rewards`), `order`, `page` (from 1) and `pageSize` (up to 100). The schema lives in `packages/shared/src/query.ts`. An invalid query gets a 400 naming the bad fields.
 
-Filtering always happens on Merkl's side: the Merkl client translates these into Merkl's own parameters (`chainId`, `mainProtocolId`, `minimumTvl`, ...) instead of downloading every opportunity and filtering locally. The list and the count (`/v4/opportunities/count`) are requested in parallel.
+Filtering always happens on Merkl's side: the Merkl client translates these into Merkl's own parameters (`chainId`, `mainProtocolId`, `minimumTvl`, ...) instead of downloading every opportunity and filtering locally. The list, the count (`/v4/opportunities/count`) and the total TVL (`/v4/opportunities/aggregate/tvl`) are requested in parallel. An id that isn't a number returns 400. An unknown numeric id returns 404, and so does an opportunity whose action this app doesn't support yet.
 
 Cross cutting concerns: environment config validated with Zod, a validation middleware, a central error handler (Express 5 forwards async errors natively), structured logs with pino, and a `Cache-Control` header on every response.
 
