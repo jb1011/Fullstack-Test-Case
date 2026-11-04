@@ -1,7 +1,9 @@
 import { Box, Button, Flex, Skeleton, Text, chakra } from "@chakra-ui/react";
 import type { OpportunitySort, OpportunitySummary, SortOrder } from "@merkl/shared";
+import { useQueryClient } from "@tanstack/react-query";
 import { Link as RouterLink } from "react-router";
 
+import { opportunityQueries } from "../api/queries";
 import { formatAprNumber, formatTvl } from "../lib/format";
 import { RoundIcon } from "./round-icon";
 
@@ -128,6 +130,14 @@ export function OpportunityTable({
   order: SortOrder;
   onSort: (sort: OpportunitySort) => void;
 }) {
+  const queryClient = useQueryClient();
+  // The item page's clientLoader reads this cache, so a hovered row opens without a request.
+  // Link prefetch alone only loads the route modules, because the route has a clientLoader.
+  const prefetch = (id: string) => {
+    void queryClient.query(opportunityQueries.detail(id)).catch(() => undefined);
+    void queryClient.query(opportunityQueries.history(id)).catch(() => undefined);
+  };
+
   return (
     <Box minW="980px">
       <Box
@@ -167,6 +177,12 @@ export function OpportunityTable({
             <RouteLink
               to={`/opportunities/${item.id}`}
               prefetch="intent"
+              onMouseEnter={() => {
+                prefetch(item.id);
+              }}
+              onFocus={() => {
+                prefetch(item.id);
+              }}
               display="grid"
               gridTemplateColumns={columns}
               minH="72px"
