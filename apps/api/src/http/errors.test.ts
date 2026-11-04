@@ -44,6 +44,14 @@ describe("errorHandler", () => {
     expect(JSON.stringify(result.body)).not.toContain("upstream secret");
   });
 
+  it("tells caches not to store an error", async () => {
+    const response = await request(appThrowing(new HttpError(404, "Opportunity not found"))).get(
+      "/boom",
+    );
+
+    expect(response.headers["cache-control"]).toBe("no-store");
+  });
+
   it("hides unexpected errors behind a bare 500", async () => {
     const result = await problemFor(new Error("database password is hunter2"));
 

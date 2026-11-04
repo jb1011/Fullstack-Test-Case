@@ -106,6 +106,10 @@ I cache the DTO a route returns, not each Merkl call on its own. A list is the p
 
 The cost: a new opportunity can take up to 60 seconds to show, and the store keeps 500 entries.
 
+## Cache-Control matches the server TTL
+
+A successful response is `public`, because nothing in it depends on who asked, and `max-age` is the same number of seconds the server keeps that answer. I didn't add a stale window on the header, for the same reason the server doesn't have one. Health and errors are `no-store`, so a liveness check or a 502 is never replayed from a browser cache.
+
 ## HTTP stays in the routes
 
 The opportunities service returns `null` when Merkl has nothing, or when an opportunity uses an action or status I don't know. The route turns that into a 404. I didn't throw HTTP errors from the service, because the cache wraps the service and a cache shouldn't know about status codes.

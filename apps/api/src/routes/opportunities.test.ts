@@ -51,6 +51,7 @@ describe("GET /opportunities", () => {
     const list = opportunityListSchema.parse(JSON.parse(response.text) as unknown);
 
     expect(response.status).toBe(200);
+    expect(response.headers["cache-control"]).toBe("public, max-age=60");
     expect(list).toMatchObject({ total: 12, totalTvl: 1000, page: 2 });
     expect(sent?.get("chainId")).toBe("1");
     expect(sent?.get("page")).toBe("1");
@@ -60,6 +61,7 @@ describe("GET /opportunities", () => {
     const response = await request(app).get("/opportunities").query({ page: "0" });
 
     expect(response.status).toBe(400);
+    expect(response.headers["cache-control"]).toBe("no-store");
     expect(problem.parse(JSON.parse(response.text) as unknown).detail).toContain("page");
   });
 
@@ -75,6 +77,7 @@ describe("GET /opportunities", () => {
     const response = await request(app).get("/opportunities");
 
     expect(response.status).toBe(502);
+    expect(response.headers["cache-control"]).toBe("no-store");
     expect(response.text).not.toContain("hunter2");
   });
 });
@@ -90,6 +93,7 @@ describe("GET /opportunities/:id", () => {
     const response = await request(app).get("/opportunities/2433802672589613459");
 
     expect(response.status).toBe(200);
+    expect(response.headers["cache-control"]).toBe("public, max-age=60");
     expect(
       opportunityDetailSchema.parse(JSON.parse(response.text) as unknown).depositUrl,
     ).toContain("morpho.org");
@@ -136,6 +140,7 @@ describe("GET /opportunities/:id/history", () => {
     const history = opportunityHistorySchema.parse(JSON.parse(response.text) as unknown);
 
     expect(response.status).toBe(200);
+    expect(response.headers["cache-control"]).toBe("public, max-age=300");
     expect(history.apr.at(-1)?.timestamp).toBeGreaterThan(history.apr[0]?.timestamp ?? 0);
   });
 });
@@ -151,6 +156,7 @@ describe("GET /filters", () => {
     const filters = filtersSchema.parse(JSON.parse(response.text) as unknown);
 
     expect(response.status).toBe(200);
+    expect(response.headers["cache-control"]).toBe("public, max-age=3600");
     expect(filters.chains).toHaveLength(chainsFixture.length);
     expect(filters.protocols).toHaveLength(protocolsFixture.length);
     expect(filters.actions).not.toContain("INVALID");
@@ -167,6 +173,7 @@ describe("GET /filters", () => {
     const response = await request(app).get("/filters");
 
     expect(response.status).toBe(502);
+    expect(response.headers["cache-control"]).toBe("no-store");
     expect(response.text).not.toContain("hunter2");
   });
 });

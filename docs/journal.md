@@ -133,3 +133,9 @@ Tested: two callers share one fetch, a fresh key is not fetched again, an expire
 The cache now wraps the opportunities service. A list is stored under the normalized query, so the same filters share one entry, and that entry is the page, the count and the total TVL together. A detail stays fresh for 60 seconds, its history for 5 minutes, and the filter lists for an hour. I asked Merkl for the first page of Ethereum opportunities: the first call took 343 ms, and the same call came back from the store in 0.3 ms.
 
 Tested: two queries that mean the same thing share one fetch, a different page fetches again, each lifetime expires on its own, a missing opportunity is remembered, a failed fetch is not stored, and a failed refresh returns the previous list.
+
+## 6.5 Set Cache-Control per route
+
+Each successful response tells caches how long it stays fresh, and that time is the same one the server uses: 60 seconds for a list or a detail, 5 minutes for history, and an hour for filters. The data is public, since it doesn't depend on the caller. Health and every error are `no-store`, so a down check or a 502 is never saved.
+
+Tested: the list and the detail send `max-age=60`, history sends `300`, filters sends `3600`, and a 400, a 404, a 502 and the health check send `no-store`.

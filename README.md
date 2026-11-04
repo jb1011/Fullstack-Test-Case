@@ -74,7 +74,7 @@ There are two layers with two different jobs.
 - **In flight deduplication**: if several requests miss the same key at once, the fetch runs once and they all wait for it.
 - **Bounded size (LRU)**: keys come from user input, so memory must stay bounded. The store is the `lru-cache` package.
 - **Errors are never cached**: a failed fetch is not stored. If a previous value is still there, it is returned, but a normal read still sees nothing once the TTL has passed.
-- **Lifetimes**: Merkl itself sends `max-age=240`. Lists are kept fresher than that.
+- **Lifetimes**: Merkl itself sends `max-age=240`. Lists are kept fresher than that. A successful response repeats that lifetime in `Cache-Control` (`public, max-age=60`, `300` or `3600`). Health and errors are `no-store`.
 
 | Data                 | Fresh for |
 | -------------------- | --------- |
@@ -135,7 +135,7 @@ Every commit ships with unit tests:
 3. **Shared query contract** (done): Zod enums and the opportunities query schema.
 4. **API, Merkl client, DTOs and mappers** (done): DTO schemas designed from real Merkl responses, tested with MSW.
 5. **API, routes** (done): a working API with validation and errors, tested with Supertest.
-6. **API, cache**: one TTL per entry, deduplication, LRU via `lru-cache`, `Cache-Control`, tested with an injected clock.
+6. **API, cache** (done): one TTL per entry, deduplication, LRU via `lru-cache`, `Cache-Control`, tested with an injected clock.
 7. **Web, SSR foundation and list page**: QueryClient middleware, hydration, filters in the URL.
 8. **Web, item page**: details, streamed chart, `clientLoader`.
 9. **Polish and end to end tests**: prefetching, skeletons, transitions, Playwright.

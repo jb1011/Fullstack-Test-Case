@@ -3,6 +3,7 @@ import { STATUS_CODES } from "node:http";
 
 import type { MerklErrorKind } from "../merkl/errors";
 import { MerklError } from "../merkl/errors";
+import { NO_STORE } from "./cacheControl";
 
 export class HttpError extends Error {
   override readonly name = "HttpError";
@@ -17,6 +18,7 @@ export class HttpError extends Error {
 const sendProblem = (res: Response, status: number, detail?: string) => {
   res
     .status(status)
+    .set("Cache-Control", NO_STORE)
     .type("application/problem+json")
     .json({ type: "about:blank", title: STATUS_CODES[status] ?? "Error", status, detail });
 };
