@@ -59,7 +59,7 @@ Browser ──> apps/web (React Router SSR) ──> apps/api (Express) ──> a
 
 `GET /opportunities` accepts `chain`, `protocol`, `action`, `status` (comma separated or repeated keys), `minTvl`, `maxTvl`, `minApr`, `search`, `sort` (`apr`, `tvl`, `rewards`), `order`, `page` (from 1) and `pageSize` (up to 100). The schema lives in `packages/shared/src/query.ts`. An invalid query gets a 400 naming the bad fields.
 
-Filtering always happens on Merkl's side: the Merkl client translates these into Merkl's own parameters (`chainId`, `mainProtocolId`, `minimumTvl`, ...) instead of downloading every opportunity and filtering locally. The list, the count (`/v4/opportunities/count`) and the total TVL (`/v4/opportunities/aggregate/tvl`) are requested in parallel. An id that isn't a number returns 400. An unknown numeric id returns 404, and so does an opportunity whose action this app doesn't support yet.
+Filtering always happens on Merkl's side: the Merkl client translates these into Merkl's own parameters (`chainId`, `mainProtocolId`, `minimumTvl`, ...) instead of downloading every opportunity and filtering locally. The list, the count (`/v4/opportunities/count`) and the total TVL (`/v4/opportunities/aggregate/tvl`) are requested in parallel, and the service caches that whole answer. An id that isn't a number returns 400. An unknown numeric id returns 404, and so does an opportunity whose action this app doesn't support yet.
 
 Cross cutting concerns: environment config validated with Zod, a validation middleware, a central error handler (Express 5 forwards async errors natively), structured logs with pino, and a `Cache-Control` header on every response.
 
@@ -70,20 +70,20 @@ There are two layers with two different jobs.
 ### Server cache (protects Merkl)
 
 - **Normalized keys**: parameters are sorted and empty ones dropped, so `?chain=1&status=LIVE` and `?status=LIVE&chain=1` hit the same entry.
-- **TTL with stale while revalidate**: an expired entry is served immediately while a single background refresh runs.
-- **In flight deduplication**: the pending promise is stored, so if 10 users ask for the same thing at once, Merkl receives one call.
-- **Bounded size (LRU)**: keys come from user input, so memory must stay bounded.
-- **Errors are never cached**: if Merkl fails, the stale entry is served instead.
-- **Lifetimes per data type**: Merkl itself sends `max-age=240`, so caching longer than that makes no sense.
+- **One TTL per entry**: after it, the next request fetches again. There is no second window where an expired entry is still served.
+- **In flight deduplication**: if several requests miss the same key at once, the fetch runs once and they all wait for it.
+- **Bounded size (LRU)**: keys come from user input, so memory must stay bounded. The store is the `lru-cache` package.
+- **Errors are never cached**: a failed fetch is not stored. If a previous value is still there, it is returned, but a normal read still sees nothing once the TTL has passed.
+- **Lifetimes**: Merkl itself sends `max-age=240`. Lists are kept fresher than that. A successful response repeats that lifetime in `Cache-Control` (`public, max-age=60`, `300` or `3600`). Health and errors are `no-store`.
 
-| Data                 | Fresh | Served stale up to |
-| -------------------- | ----- | ------------------ |
-| Lists and details    | 60 s  | 240 s              |
-| APR and TVL history  | 5 min | 15 min             |
-| Chains and protocols | 1 h   | 6 h                |
+| Data                 | Fresh for |
+| -------------------- | --------- |
+| Lists and details    | 60 s      |
+| APR and TVL history  | 5 min     |
+| Chains and protocols | 1 h       |
 
-- **Storage behind an interface**: in production I would plug Redis in so every API instance shares the cache. I document it but do not build it.
-- **Injected clock and fetcher**: the cache is tested with fake timers.
+- **Storage behind an interface**: `get`, `set`, `delete` and `load`. The service caches the answer a route returns (one list is the page, the count and the total TVL together), under the normalized query. The store keeps 500 entries. Values are copied, so one request cannot edit the object another request receives.
+- **A clock passed into the store**: tests move time by handing the store a `now` function.
 
 ### Client cache (makes navigation instant)
 
@@ -124,7 +124,7 @@ Rejected alternatives:
 Every commit ships with unit tests:
 
 - **shared**: schema parsing and normalization.
-- **api**: Merkl client and mappers against MSW, cache with fake timers, routes with Supertest.
+- **api**: Merkl client and mappers against MSW, cache with an injected clock, routes with Supertest.
 - **web**: components and URL state with Testing Library.
 - **end to end**: Playwright on the main flows, at the end.
 
@@ -135,7 +135,7 @@ Every commit ships with unit tests:
 3. **Shared query contract** (done): Zod enums and the opportunities query schema.
 4. **API, Merkl client, DTOs and mappers** (done): DTO schemas designed from real Merkl responses, tested with MSW.
 5. **API, routes** (done): a working API with validation and errors, tested with Supertest.
-6. **API, cache**: TTL, stale while revalidate, deduplication, LRU, `Cache-Control`, tested with fake timers.
+6. **API, cache** (done): one TTL per entry, deduplication, LRU via `lru-cache`, `Cache-Control`, tested with an injected clock.
 7. **Web, SSR foundation and list page**: QueryClient middleware, hydration, filters in the URL.
 8. **Web, item page**: details, streamed chart, `clientLoader`.
 9. **Polish and end to end tests**: prefetching, skeletons, transitions, Playwright.

@@ -109,3 +109,33 @@ Tested: Supertest against MSW. The list matches the shared schema and Merkl rece
 `GET /filters` feeds the dropdowns. The service asks Merkl for chains and protocols at the same time, and the actions come from my own enum with `INVALID` left out, so the list doesn't depend on downloading every opportunity. Chains and protocols are sorted by name.
 
 Tested: the response matches the shared schema, protocols are requested with `items=500` and come back sorted even when Merkl sends them backwards, and a Merkl 500 becomes a 502 that hides the upstream message.
+
+## 6.1 Add cache store interface and in memory LRU store
+
+The cache sits behind `get`, `set` and `delete`, and the memory store is the `lru-cache` package. It keeps a fixed number of entries and drops the least recently used one when it is full. Reading or replacing an entry makes it the newest. Values are copied on the way in and out, because the package stores the object you give it and a caller must not be able to change what the next request gets.
+
+Tested: a missing key, null as a real value, an update that does not grow the store, eviction, a read that saves an entry from eviction, copying, delete, and a store that refuses undefined and a non positive size.
+
+## 6.2 Add a TTL per entry
+
+`set` takes a TTL in milliseconds. A list is fresh for 60 seconds, history for 5 minutes, and chains and protocols for an hour. After that, `get` returns nothing and the caller fetches again. Leaving the TTL off keeps the entry until the size limit drops it, which is what the eviction tests use.
+
+Tested: a value is present at the exact TTL and gone one millisecond later, two keys expire on their own, replacing a value restarts its TTL, an entry with no TTL survives the longest lifetime, and a non positive TTL is refused.
+
+## 6.3 Share in flight loads and keep the last value when a load fails
+
+`load` returns a fresh value without fetching. When several callers miss the same key together, the fetcher runs once and they all wait on it. If the fetch fails and a previous value is still stored, that value is returned, but `get` still returns nothing because the TTL has passed. The error is not stored, so the next `load` tries again.
+
+Tested: two callers share one fetch, a fresh key is not fetched again, an expired key is, a failure with nothing stored throws, and a failed refresh returns the previous value twice without making it fresh.
+
+## 6.4 Cache Merkl calls in the services
+
+The cache now wraps the opportunities service. A list is stored under the normalized query, so the same filters share one entry, and that entry is the page, the count and the total TVL together. A detail stays fresh for 60 seconds, its history for 5 minutes, and the filter lists for an hour. I asked Merkl for the first page of Ethereum opportunities: the first call took 343 ms, and the same call came back from the store in 0.3 ms.
+
+Tested: two queries that mean the same thing share one fetch, a different page fetches again, each lifetime expires on its own, a missing opportunity is remembered, a failed fetch is not stored, and a failed refresh returns the previous list.
+
+## 6.5 Set Cache-Control per route
+
+Each successful response tells caches how long it stays fresh, and that time is the same one the server uses: 60 seconds for a list or a detail, 5 minutes for history, and an hour for filters. The data is public, since it doesn't depend on the caller. Health and every error are `no-store`, so a down check or a 502 is never saved.
+
+Tested: the list and the detail send `max-age=60`, history sends `300`, filters sends `3600`, and a 400, a 404, a 502 and the health check send `no-store`.

@@ -11,6 +11,7 @@ describe("createApp", () => {
     const response = await request(app).get("/health");
 
     expect(response.status).toBe(200);
+    expect(response.headers["cache-control"]).toBe("no-store");
     expect(response.body).toEqual({ status: "ok" });
   });
 
@@ -18,6 +19,7 @@ describe("createApp", () => {
     const response = await request(app).get("/nope");
 
     expect(response.status).toBe(404);
+    expect(response.headers["cache-control"]).toBe("no-store");
     expect(response.type).toBe("application/problem+json");
     expect(response.body).toEqual({
       type: "about:blank",

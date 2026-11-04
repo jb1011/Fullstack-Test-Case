@@ -22,7 +22,7 @@ The cost: each filter combination is its own cache entry.
 
 TanStack Query only caches inside one browser, so it can't stop 100 users from causing 100 calls to Merkl. The API has its own in memory cache for that, and TanStack makes navigation instant for each user.
 
-Data can be up to 240 seconds old, which is what Merkl itself allows (`max-age=240`). With several API instances I'd move the cache to Redis. The storage is behind an interface so that's one adapter.
+A list entry stays fresh for 60 seconds, which is tighter than the 240 seconds Merkl itself allows.
 
 ## SSR hydration with TanStack Query
 
@@ -86,9 +86,33 @@ If Merkl starts sending an action or status I don't know, that opportunity is sk
 
 Express's default query parser keeps only the last value when a key is repeated, so `chain=1&chain=42161` would drop Ethereum and the request would still succeed. The extended parser keeps every value, which the schema already sorts and dedupes. Unknown parameters are ignored, so a tracking parameter doesn't fail the request.
 
+## lru-cache
+
+The in memory store is the `lru-cache` package. It is the usual LRU in Node services, and it already does a TTL and joined fetches, which the next commits need. An entry has one freshness time. A list stays fresh for 60 seconds and is then fetched again. There is no second, longer window where an old entry is still served.
+
+Values are copied on the way in and out. The package stores the object you give it, and one request must not be able to edit what another request receives.
+
+Tests pass a clock into the store. Fake timers start `performance.now()` at 0, and the package treats a start time of 0 as "no timestamp", so an entry would never expire.
+
+## One load for identical keys
+
+If several requests miss the same key at once, the fetcher runs once and they all wait for it. If that fetch fails and a previous value is still stored, they receive it. A normal read still returns nothing once the TTL has passed, and the error is never stored, so the next request tries again.
+
+The cost: an old value can sit in memory until the size limit drops it.
+
+## Cache the service answer
+
+I cache the DTO a route returns, not each Merkl call on its own. A list is the page, the count and the total TVL together, so they stay one snapshot and expire together. The key is the normalized query, which already sorts values and drops defaults, so the same filters share an entry whatever order they arrived in.
+
+The cost: a new opportunity can take up to 60 seconds to show, and the store keeps 500 entries.
+
+## Cache-Control matches the server TTL
+
+A successful response is `public`, because nothing in it depends on who asked, and `max-age` is the same number of seconds the server keeps that answer. I didn't add a stale window on the header, for the same reason the server doesn't have one. Health and errors are `no-store`, so a liveness check or a 502 is never replayed from a browser cache.
+
 ## HTTP stays in the routes
 
-The opportunities service returns `null` when Merkl has nothing, or when an opportunity uses an action or status I don't know. The route turns that into a 404. I didn't throw HTTP errors from the service, because the cache will wrap the service next and a cache shouldn't know about status codes.
+The opportunities service returns `null` when Merkl has nothing, or when an opportunity uses an action or status I don't know. The route turns that into a 404. I didn't throw HTTP errors from the service, because the cache wraps the service and a cache shouldn't know about status codes.
 
 ## Errors as problem details
 
