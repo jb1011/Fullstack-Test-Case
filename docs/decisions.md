@@ -42,6 +42,12 @@ TypeScript 7 is out, but `typescript-eslint` only supports up to 6.0, so I pinne
 
 The cost: a production API build would need a bundler like esbuild.
 
+## Type aware linting
+
+I use typescript-eslint's `strictTypeChecked` rules. They read the types, so they catch things plain linting can't, like a promise nobody awaits. That matters in an API full of `fetch` calls.
+
+The cost: linting is slower because it runs the type checker.
+
 ## Chakra UI only
 
 Chakra gives me components and styling in one tool. Adding Tailwind would mean two styling systems fighting each other.
