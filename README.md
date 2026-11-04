@@ -59,7 +59,7 @@ Browser ──> apps/web (React Router SSR) ──> apps/api (Express) ──> a
 
 `GET /opportunities` accepts `chain`, `protocol`, `action`, `status` (comma separated or repeated keys), `minTvl`, `maxTvl`, `minApr`, `search`, `sort` (`apr`, `tvl`, `rewards`), `order`, `page` (from 1) and `pageSize` (up to 100). The schema lives in `packages/shared/src/query.ts`. An invalid query gets a 400 naming the bad fields.
 
-Filtering always happens on Merkl's side: the Merkl client translates these into Merkl's own parameters (`chainId`, `mainProtocolId`, `minimumTvl`, ...) instead of downloading every opportunity and filtering locally. The list, the count (`/v4/opportunities/count`) and the total TVL (`/v4/opportunities/aggregate/tvl`) are requested in parallel. An id that isn't a number returns 400. An unknown numeric id returns 404, and so does an opportunity whose action this app doesn't support yet.
+Filtering always happens on Merkl's side: the Merkl client translates these into Merkl's own parameters (`chainId`, `mainProtocolId`, `minimumTvl`, ...) instead of downloading every opportunity and filtering locally. The list, the count (`/v4/opportunities/count`) and the total TVL (`/v4/opportunities/aggregate/tvl`) are requested in parallel, and the service caches that whole answer. An id that isn't a number returns 400. An unknown numeric id returns 404, and so does an opportunity whose action this app doesn't support yet.
 
 Cross cutting concerns: environment config validated with Zod, a validation middleware, a central error handler (Express 5 forwards async errors natively), structured logs with pino, and a `Cache-Control` header on every response.
 
@@ -82,7 +82,7 @@ There are two layers with two different jobs.
 | APR and TVL history  | 5 min     |
 | Chains and protocols | 1 h       |
 
-- **Storage behind an interface**: `get`, `set` and `delete`. Values are copied, so one request cannot edit the object another request receives.
+- **Storage behind an interface**: `get`, `set`, `delete` and `load`. The service caches the answer a route returns (one list is the page, the count and the total TVL together), under the normalized query. The store keeps 500 entries. Values are copied, so one request cannot edit the object another request receives.
 - **A clock passed into the store**: tests move time by handing the store a `now` function.
 
 ### Client cache (makes navigation instant)
@@ -124,7 +124,7 @@ Rejected alternatives:
 Every commit ships with unit tests:
 
 - **shared**: schema parsing and normalization.
-- **api**: Merkl client and mappers against MSW, cache with fake timers, routes with Supertest.
+- **api**: Merkl client and mappers against MSW, cache with an injected clock, routes with Supertest.
 - **web**: components and URL state with Testing Library.
 - **end to end**: Playwright on the main flows, at the end.
 
@@ -135,7 +135,7 @@ Every commit ships with unit tests:
 3. **Shared query contract** (done): Zod enums and the opportunities query schema.
 4. **API, Merkl client, DTOs and mappers** (done): DTO schemas designed from real Merkl responses, tested with MSW.
 5. **API, routes** (done): a working API with validation and errors, tested with Supertest.
-6. **API, cache**: one TTL per entry, deduplication, LRU via `lru-cache`, `Cache-Control`, tested with fake timers.
+6. **API, cache**: one TTL per entry, deduplication, LRU via `lru-cache`, `Cache-Control`, tested with an injected clock.
 7. **Web, SSR foundation and list page**: QueryClient middleware, hydration, filters in the URL.
 8. **Web, item page**: details, streamed chart, `clientLoader`.
 9. **Polish and end to end tests**: prefetching, skeletons, transitions, Playwright.

@@ -100,9 +100,15 @@ If several requests miss the same key at once, the fetcher runs once and they al
 
 The cost: an old value can sit in memory until the size limit drops it.
 
+## Cache the service answer
+
+I cache the DTO a route returns, not each Merkl call on its own. A list is the page, the count and the total TVL together, so they stay one snapshot and expire together. The key is the normalized query, which already sorts values and drops defaults, so the same filters share an entry whatever order they arrived in.
+
+The cost: a new opportunity can take up to 60 seconds to show, and the store keeps 500 entries.
+
 ## HTTP stays in the routes
 
-The opportunities service returns `null` when Merkl has nothing, or when an opportunity uses an action or status I don't know. The route turns that into a 404. I didn't throw HTTP errors from the service, because the cache will wrap the service next and a cache shouldn't know about status codes.
+The opportunities service returns `null` when Merkl has nothing, or when an opportunity uses an action or status I don't know. The route turns that into a 404. I didn't throw HTTP errors from the service, because the cache wraps the service and a cache shouldn't know about status codes.
 
 ## Errors as problem details
 

@@ -127,3 +127,9 @@ Tested: a value is present at the exact TTL and gone one millisecond later, two 
 `load` returns a fresh value without fetching. When several callers miss the same key together, the fetcher runs once and they all wait on it. If the fetch fails and a previous value is still stored, that value is returned, but `get` still returns nothing because the TTL has passed. The error is not stored, so the next `load` tries again.
 
 Tested: two callers share one fetch, a fresh key is not fetched again, an expired key is, a failure with nothing stored throws, and a failed refresh returns the previous value twice without making it fresh.
+
+## 6.4 Cache Merkl calls in the services
+
+The cache now wraps the opportunities service. A list is stored under the normalized query, so the same filters share one entry, and that entry is the page, the count and the total TVL together. A detail stays fresh for 60 seconds, its history for 5 minutes, and the filter lists for an hour. I asked Merkl for the first page of Ethereum opportunities: the first call took 343 ms, and the same call came back from the store in 0.3 ms.
+
+Tested: two queries that mean the same thing share one fetch, a different page fetches again, each lifetime expires on its own, a missing opportunity is remembered, a failed fetch is not stored, and a failed refresh returns the previous list.
