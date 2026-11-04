@@ -70,20 +70,20 @@ There are two layers with two different jobs.
 ### Server cache (protects Merkl)
 
 - **Normalized keys**: parameters are sorted and empty ones dropped, so `?chain=1&status=LIVE` and `?status=LIVE&chain=1` hit the same entry.
-- **TTL with stale while revalidate**: an expired entry is served immediately while a single background refresh runs.
+- **One TTL per entry**: after it, the next request fetches again. There is no second window where an expired entry is still served.
 - **In flight deduplication**: the pending promise is stored, so if 10 users ask for the same thing at once, Merkl receives one call.
-- **Bounded size (LRU)**: keys come from user input, so memory must stay bounded.
-- **Errors are never cached**: if Merkl fails, the stale entry is served instead.
-- **Lifetimes per data type**: Merkl itself sends `max-age=240`, so caching longer than that makes no sense.
+- **Bounded size (LRU)**: keys come from user input, so memory must stay bounded. The store is the `lru-cache` package.
+- **Errors are never cached**: a failed fetch is not stored.
+- **Lifetimes**: Merkl itself sends `max-age=240`. Lists are kept fresher than that.
 
-| Data                 | Fresh | Served stale up to |
-| -------------------- | ----- | ------------------ |
-| Lists and details    | 60 s  | 240 s              |
-| APR and TVL history  | 5 min | 15 min             |
-| Chains and protocols | 1 h   | 6 h                |
+| Data                 | Fresh for |
+| -------------------- | --------- |
+| Lists and details    | 60 s      |
+| APR and TVL history  | 5 min     |
+| Chains and protocols | 1 h       |
 
-- **Storage behind an interface**: in production I would plug Redis in so every API instance shares the cache. I document it but do not build it.
-- **Injected clock and fetcher**: the cache is tested with fake timers.
+- **Storage behind an interface**: `get`, `set` and `delete`. Values are copied, so one request cannot edit the object another request receives.
+- **Fake timers**: tests move the clock without waiting.
 
 ### Client cache (makes navigation instant)
 
@@ -135,7 +135,7 @@ Every commit ships with unit tests:
 3. **Shared query contract** (done): Zod enums and the opportunities query schema.
 4. **API, Merkl client, DTOs and mappers** (done): DTO schemas designed from real Merkl responses, tested with MSW.
 5. **API, routes** (done): a working API with validation and errors, tested with Supertest.
-6. **API, cache**: TTL, stale while revalidate, deduplication, LRU, `Cache-Control`, tested with fake timers.
+6. **API, cache**: one TTL per entry, deduplication, LRU via `lru-cache`, `Cache-Control`, tested with fake timers.
 7. **Web, SSR foundation and list page**: QueryClient middleware, hydration, filters in the URL.
 8. **Web, item page**: details, streamed chart, `clientLoader`.
 9. **Polish and end to end tests**: prefetching, skeletons, transitions, Playwright.

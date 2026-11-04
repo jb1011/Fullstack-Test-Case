@@ -22,7 +22,7 @@ The cost: each filter combination is its own cache entry.
 
 TanStack Query only caches inside one browser, so it can't stop 100 users from causing 100 calls to Merkl. The API has its own in memory cache for that, and TanStack makes navigation instant for each user.
 
-Data can be up to 240 seconds old, which is what Merkl itself allows (`max-age=240`). With several API instances I'd move the cache to Redis. The storage is behind an interface so that's one adapter.
+A list entry stays fresh for 60 seconds, which is tighter than the 240 seconds Merkl itself allows.
 
 ## SSR hydration with TanStack Query
 
@@ -85,6 +85,12 @@ If Merkl starts sending an action or status I don't know, that opportunity is sk
 ## Extended query parser
 
 Express's default query parser keeps only the last value when a key is repeated, so `chain=1&chain=42161` would drop Ethereum and the request would still succeed. The extended parser keeps every value, which the schema already sorts and dedupes. Unknown parameters are ignored, so a tracking parameter doesn't fail the request.
+
+## lru-cache
+
+The in memory store is the `lru-cache` package. It is the usual LRU in Node services, and it already does a TTL and joined fetches, which the next commits need. An entry has one freshness time. A list stays fresh for 60 seconds and is then fetched again. There is no second, longer window where an old entry is still served.
+
+Values are copied on the way in and out. The package stores the object you give it, and one request must not be able to edit what another request receives.
 
 ## HTTP stays in the routes
 

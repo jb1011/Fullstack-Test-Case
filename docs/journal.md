@@ -109,3 +109,9 @@ Tested: Supertest against MSW. The list matches the shared schema and Merkl rece
 `GET /filters` feeds the dropdowns. The service asks Merkl for chains and protocols at the same time, and the actions come from my own enum with `INVALID` left out, so the list doesn't depend on downloading every opportunity. Chains and protocols are sorted by name.
 
 Tested: the response matches the shared schema, protocols are requested with `items=500` and come back sorted even when Merkl sends them backwards, and a Merkl 500 becomes a 502 that hides the upstream message.
+
+## 6.1 Add cache store interface and in memory LRU store
+
+The cache sits behind `get`, `set` and `delete`, and the memory store is the `lru-cache` package. It keeps a fixed number of entries and drops the least recently used one when it is full. Reading or replacing an entry makes it the newest. Values are copied on the way in and out, because the package stores the object you give it and a caller must not be able to change what the next request gets.
+
+Tested: a missing key, null as a real value, an update that does not grow the store, eviction, a read that saves an entry from eviction, copying, delete, and a store that refuses undefined and a non positive size.
