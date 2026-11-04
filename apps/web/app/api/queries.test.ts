@@ -2,7 +2,7 @@ import { opportunitiesQuerySchema } from "@merkl/shared";
 import { QueryClient } from "@tanstack/react-query";
 import { describe, expect, it } from "vitest";
 
-import type { ApiClient } from "./client";
+import { ApiError, type ApiClient } from "./client";
 import { detail, filters, history, list } from "./fixture";
 import {
   createOpportunityQueries,
@@ -47,6 +47,12 @@ describe("opportunity queries", () => {
     expect(queries.history("1").staleTime).toBe(HISTORY_STALE_MS);
     expect(queries.filters().staleTime).toBe(FILTERS_STALE_MS);
     expect(queries.filters().gcTime).toBe(FILTERS_STALE_MS);
+    const retry = queries.detail("1").retry;
+    expect(typeof retry).toBe("function");
+    if (typeof retry !== "function") return;
+    expect(retry(0, new ApiError(404, "missing"))).toBe(false);
+    expect(retry(0, new ApiError(502, "upstream"))).toBe(true);
+    expect(retry(3, new ApiError(502, "upstream"))).toBe(false);
   });
 
   it("calls the matching client method", async () => {

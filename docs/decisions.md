@@ -142,6 +142,8 @@ A list or a detail stays fresh in the browser for 60 seconds, history for 5 minu
 
 Loaders on one request run at the same time, so the root loader cannot snapshot the cache while another loader is still fetching. The dehydrated state is read when React Router serializes the page, which is after every loader has finished. I didn't dehydrate at the end of the root loader function, because that runs too early.
 
+A query that is still running is part of that snapshot, as a promise that streams to the browser. Only finished queries used to be sent, so history was missing on the first load and the browser called the API again. I didn't make the loader wait for history, because the hero should paint before the chart.
+
 ## The browser calls the API directly
 
 The server render and the browser both call the API at its own URL. I allow any origin, because the responses are public and the request sends no cookies. I didn't proxy the API through the web app, because a proxy on `/opportunities` would collide with the item page, and a proxy that exists only in dev would be missing when the production server runs.
@@ -166,12 +168,20 @@ The list design was written for Tailwind, Radix and a motion library. I drew it 
 
 I mark the clicked segment immediately. If that list is still fresh in the cache I show it at once. If it is not, I put skeletons in the rows until the loader finishes. I didn't leave the previous rows up under a filter I have not loaded, because they would look like they already belong to it.
 
-The cost: switching back after the minute is up shows skeletons again, because that copy is no longer fresh.
-
 ## The time box is over
 
 The three hours are past, so I am cutting the polish. I will not add motion, prefetch on hover, or keepPreviousData. The list already selects a filter at once and shows skeletons only when that list is not fresh.
 
 I am keeping the item page, because the exercise asks for one. After it I will add one Playwright test: the first load does not call the API from the browser, and going back is served from the cache.
 
-The cost: there is no animation from the list to the item, and a stale list shows skeletons instead of the previous rows.
+## The item page shows recent history in a table
+
+The exercise asks for an item page, so each row links to one. The loader waits for the opportunity and starts the history without waiting, so the hero can paint while those points are still on the way. Hovering a row prefetches that page. I did not draw a chart, because a working page matters more than a half finished one, and the recent APR and TVL already come from the history.
+
+## History is a chart
+
+The history was already loading behind the hero, so I drew it with Recharts instead of leaving the table. APR opens on the last seven days. TVL, thirty days and the full series are the other views. The change since yesterday is the newest point minus the point from a day earlier.
+
+## Hover loads the opportunity
+
+The link prefetch downloads the page code. It does not run the client loader, so the detail and the history were still fetched when the row opened. On hover and on focus I load both into the browser cache. I kept the link prefetch, because the code still has to arrive. A second pass while those entries are fresh does not call the API again.

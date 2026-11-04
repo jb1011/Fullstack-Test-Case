@@ -193,3 +193,37 @@ Tested: a chain filter still writes the URL and loads that list, reset clears th
 The test that holds a list until I release it was assigning the promise resolve directly. Typecheck rejects that, because that function does not return undefined. It now calls resolve from a function with the right type.
 
 Tested: the web typecheck passes.
+
+## 8.1 Add the opportunity page
+
+Each row now opens an opportunity page. The loader waits for the detail and prefetches the history, so the hero can show while the history is still loading. The hero shows the name, APR, TVL, daily rewards, chain, protocol, status and a deposit link when there is one. A missing opportunity is a 404. I put the latest history points in a table instead of a chart, because the page had to work and the chart can wait. A client error is not retried.
+
+Tested: the page renders the hero and the newest history first, the hero stays up while history is loading, the loader returns while history is still pending, a fresh detail is not fetched again, and an unknown id shows the 404 boundary.
+
+## 8.2 Lay out the opportunity page
+
+The opportunity page now follows the explorer detail. The name sits beside the current APR, with the chain, protocol, action and status as pills. TVL, daily rewards and the time left until the campaign ends sit under that. The history table stays on the left, and the deposit link and tokens sit on the right. I left out a campaign count, earn steps and a second link, because the API does not send them.
+
+Tested: the page shows the current APR, the pills, the time left, the deposit link and the tokens, and the history table is unchanged.
+
+## 8.3 Chart the APR and TVL history
+
+The history table is now a chart. APR is the first view, and TVL is the other. Seven days is the opening range, with thirty days and the full series beside it. The left side is a scale, percent for APR and compact dollars for TVL. The figure under the current APR is how much that rate moved since the point from a day earlier.
+
+Tested: seven days shows the two newest points, thirty days and the full series add the older ones, switching to TVL changes the chart, the scale uses percent or compact dollars, and the change since yesterday is shown.
+
+## 8.4 Stream a history request that is still running
+
+On the first load the server started history and the browser started it again. Only a finished query was in the page, so a request that was still running never arrived and the browser cache was empty. That request is now sent as a promise that streams in. The loader still returns before history finishes, so the hero does not wait for the chart.
+
+Tested: a query that is still running is in the dehydrated state as a promise, the browser renders it without fetching, the loader still returns before history finishes, and a fresh detail and history are not fetched again.
+
+## 8.5 Load an opportunity when its row is hovered
+
+The link prefetch only downloaded the page code. A page with a client loader does not prefetch its data that way, so opening a row still called the API. Hovering or focusing a row now loads the detail and the history into the browser cache. Opening that row then makes no request, and a second hover while the entries are fresh does not call again.
+
+Tested: hover loads one row, focus loads another, and reading either query again does not fetch.
+
+## 8.6 Keep one decimal on compact dollars
+
+Node 24 drops a trailing zero in compact currency, so one thousand dollars prints as $1K instead of $1.0K. I set the minimum fraction digits to 1, the same as the maximum, so both Node versions print the same amount. I did not limit the project to Node 22, because anyone on Node 24 would still see the failures.

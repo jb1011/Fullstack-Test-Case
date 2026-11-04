@@ -1,5 +1,5 @@
 import { HydrationBoundary, QueryClientProvider, useQuery } from "@tanstack/react-query";
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { RouterContextProvider } from "react-router";
 import { describe, expect, it } from "vitest";
 
@@ -72,10 +72,13 @@ describe("query client", () => {
       });
       const data = dehydratedLoaderData(queryClient);
 
-      expect(data.dehydratedState.queries).toHaveLength(0);
+      expect(data.dehydratedState.queries).toHaveLength(1);
+      expect(data.dehydratedState.queries[0]?.state.status).toBe("pending");
+      expect(data.dehydratedState.queries[0]?.promise).toBeInstanceOf(Promise);
       gate.resolve(filters);
       await loading;
       expect(data.dehydratedState.queries.map((query) => query.queryKey)).toEqual([["filters"]]);
+      expect(data.dehydratedState.queries[0]?.state.data).toEqual(filters);
 
       return new Response();
     });
@@ -115,6 +118,49 @@ describe("query client", () => {
         </HydrationBoundary>
       </QueryClientProvider>,
     );
+
+    expect(screen.getByText("Ethereum")).toBeTruthy();
+    expect(fetches).toBe(0);
+  });
+
+  it("sends a query that is still running and the browser does not fetch it", async () => {
+    const server = createQueryClient();
+    const gate = pending<typeof filters>();
+    const loading = server.query({
+      ...opportunityQueries.filters(),
+      queryFn: () => gate.promise,
+    });
+    const state = dehydratedLoaderData(server).dehydratedState;
+    expect(state.queries[0]?.state.status).toBe("pending");
+
+    let fetches = 0;
+    const browser = createQueryClient();
+    function ChainName() {
+      const { data } = useQuery({
+        ...opportunityQueries.filters(),
+        queryFn: () => {
+          fetches += 1;
+          return Promise.resolve(filters);
+        },
+      });
+      return <p>{data?.chains[0]?.name ?? "loading"}</p>;
+    }
+
+    render(
+      <QueryClientProvider client={browser}>
+        <HydrationBoundary state={state}>
+          <ChainName />
+        </HydrationBoundary>
+      </QueryClientProvider>,
+    );
+
+    expect(screen.getByText("loading")).toBeTruthy();
+    expect(fetches).toBe(0);
+
+    gate.resolve(filters);
+    await act(async () => {
+      await loading;
+    });
 
     expect(screen.getByText("Ethereum")).toBeTruthy();
     expect(fetches).toBe(0);
