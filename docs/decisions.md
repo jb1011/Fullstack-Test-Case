@@ -48,6 +48,12 @@ I use typescript-eslint's `strictTypeChecked` rules. They read the types, so the
 
 The cost: linting is slower because it runs the type checker.
 
+## CI as one matrix
+
+I run the four checks as a matrix of parallel jobs instead of steps in one job. Each check shows up separately on the PR, and a lint error doesn't stop the tests from running.
+
+The cost: `npm ci` runs four times, but the npm cache keeps it fast.
+
 ## Chakra UI only
 
 Chakra gives me components and styling in one tool. Adding Tailwind would mean two styling systems fighting each other.

@@ -33,3 +33,9 @@ Tested: 2 smoke tests pass, and `npx vitest --project api` runs a single workspa
 `npm run dev` starts every `dev:*` script at the root in parallel, each with its own colored prefix. For now that's only the API, running under `tsx watch` so it restarts on every save. The web app becomes one more `dev:web` line in PR 7.
 
 Tested: I ran `npm run dev`, edited `src/index.ts`, and tsx reran it under the `[api]` prefix.
+
+## 2.1 Add GitHub Actions workflow
+
+Every PR and every push to `main` runs format check, lint, typecheck and tests. A matrix turns them into four parallel jobs, so one failure doesn't hide the others and each shows up as its own check on the PR. Node comes from `.nvmrc`, so CI and my machine always use the same version.
+
+Tested: I replayed the CI steps locally (`npm ci` then the four scripts) and they pass. The real proof is this PR's checks.
