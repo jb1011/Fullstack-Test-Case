@@ -15,14 +15,14 @@ I chose **opportunities**: it is the core resource of Merkl, and the Merkl API s
 
 ## Stack
 
-| Area     | Choice                                                                                          |
-| -------- | ----------------------------------------------------------------------------------------------- |
-| Monorepo | npm workspaces: `apps/api`, `apps/web`, `packages/shared`                                       |
-| API      | Node, Express 5, TypeScript, Zod, pino                                                          |
-| Web      | React Router v7 (framework mode, SSR), TanStack Query v5, Chakra UI, motion, Recharts           |
-| Shared   | Zod schemas and inferred types, consumed as TypeScript source (no build step)                   |
-| Tooling  | strict TypeScript, ESLint (flat config, typescript-eslint, react-hooks), Prettier               |
-| Tests    | Vitest, Supertest, MSW, Testing Library, Playwright (end to end, last)                          |
+| Area     | Choice                                                                                |
+| -------- | ------------------------------------------------------------------------------------- |
+| Monorepo | npm workspaces: `apps/api`, `apps/web`, `packages/shared`                             |
+| API      | Node, Express 5, TypeScript, Zod, pino                                                |
+| Web      | React Router v7 (framework mode, SSR), TanStack Query v5, Chakra UI, motion, Recharts |
+| Shared   | Zod schemas and inferred types, consumed as TypeScript source (no build step)         |
+| Tooling  | strict TypeScript, ESLint (flat config, typescript-eslint, react-hooks), Prettier     |
+| Tests    | Vitest, Supertest, MSW, Testing Library, Playwright (end to end, last)                |
 
 ## Architecture
 
@@ -148,6 +148,5 @@ Prerequisites: Node 22 (see `.nvmrc`) and npm 10.
 ```bash
 nvm use
 npm install
+npm run typecheck
 ```
-
-Run commands are added as the scaffold lands (roadmap step 1).
