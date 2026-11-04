@@ -94,6 +94,12 @@ Values are copied on the way in and out. The package stores the object you give 
 
 Tests pass a clock into the store. Fake timers start `performance.now()` at 0, and the package treats a start time of 0 as "no timestamp", so an entry would never expire.
 
+## One load for identical keys
+
+If several requests miss the same key at once, the fetcher runs once and they all wait for it. If that fetch fails and a previous value is still stored, they receive it. A normal read still returns nothing once the TTL has passed, and the error is never stored, so the next request tries again.
+
+The cost: an old value can sit in memory until the size limit drops it.
+
 ## HTTP stays in the routes
 
 The opportunities service returns `null` when Merkl has nothing, or when an opportunity uses an action or status I don't know. The route turns that into a 404. I didn't throw HTTP errors from the service, because the cache will wrap the service next and a cache shouldn't know about status codes.

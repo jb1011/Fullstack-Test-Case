@@ -163,3 +163,85 @@ describe("ttl", () => {
     expect(cache.get("a")).toBeUndefined();
   });
 });
+
+describe("load", () => {
+  const start = 1_000_000;
+  let now = start;
+
+  const store = () => {
+    now = start;
+    return createMemoryStore(10, () => now);
+  };
+
+  it("runs one fetch for identical keys in flight", async () => {
+    const cache = store();
+    let calls = 0;
+    let release: (value: string) => void = () => undefined;
+    const pending = new Promise<string>((resolve) => {
+      release = resolve;
+    });
+    const fetch = () => {
+      calls += 1;
+      return pending;
+    };
+
+    const first = cache.load("list", LIST_TTL_MS, fetch);
+    const second = cache.load("list", LIST_TTL_MS, fetch);
+    release("rows");
+
+    await expect(first).resolves.toBe("rows");
+    await expect(second).resolves.toBe("rows");
+    expect(calls).toBe(1);
+  });
+
+  it("does not fetch again while the value is fresh", async () => {
+    const cache = store();
+    await cache.load("list", LIST_TTL_MS, () => Promise.resolve("rows"));
+
+    let calls = 0;
+    await expect(
+      cache.load("list", LIST_TTL_MS, () => {
+        calls += 1;
+        return Promise.resolve("other");
+      }),
+    ).resolves.toBe("rows");
+    expect(calls).toBe(0);
+  });
+
+  it("fetches again once the ttl has passed", async () => {
+    const cache = store();
+    await cache.load("list", LIST_TTL_MS, () => Promise.resolve("old"));
+
+    now = start + LIST_TTL_MS + 1;
+    await expect(cache.load("list", LIST_TTL_MS, () => Promise.resolve("new"))).resolves.toBe(
+      "new",
+    );
+    expect(cache.get("list")).toBe("new");
+  });
+
+  it("throws when the fetch fails and nothing was stored", async () => {
+    const cache = store();
+
+    await expect(
+      cache.load("list", LIST_TTL_MS, () => Promise.reject(new Error("down"))),
+    ).rejects.toThrow("down");
+    expect(cache.get("list")).toBeUndefined();
+    await expect(cache.load("list", LIST_TTL_MS, () => Promise.resolve("rows"))).resolves.toBe(
+      "rows",
+    );
+  });
+
+  it("returns the previous value when a refresh fails, without making it fresh", async () => {
+    const cache = store();
+    cache.set("list", "old", LIST_TTL_MS);
+    now = start + LIST_TTL_MS + 1;
+
+    await expect(
+      cache.load("list", LIST_TTL_MS, () => Promise.reject(new Error("down"))),
+    ).resolves.toBe("old");
+    expect(cache.get("list")).toBeUndefined();
+    await expect(
+      cache.load("list", LIST_TTL_MS, () => Promise.reject(new Error("still down"))),
+    ).resolves.toBe("old");
+  });
+});

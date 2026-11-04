@@ -71,9 +71,9 @@ There are two layers with two different jobs.
 
 - **Normalized keys**: parameters are sorted and empty ones dropped, so `?chain=1&status=LIVE` and `?status=LIVE&chain=1` hit the same entry.
 - **One TTL per entry**: after it, the next request fetches again. There is no second window where an expired entry is still served.
-- **In flight deduplication**: the pending promise is stored, so if 10 users ask for the same thing at once, Merkl receives one call.
+- **In flight deduplication**: if several requests miss the same key at once, the fetch runs once and they all wait for it.
 - **Bounded size (LRU)**: keys come from user input, so memory must stay bounded. The store is the `lru-cache` package.
-- **Errors are never cached**: a failed fetch is not stored.
+- **Errors are never cached**: a failed fetch is not stored. If a previous value is still there, it is returned, but a normal read still sees nothing once the TTL has passed.
 - **Lifetimes**: Merkl itself sends `max-age=240`. Lists are kept fresher than that.
 
 | Data                 | Fresh for |

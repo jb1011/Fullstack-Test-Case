@@ -121,3 +121,9 @@ Tested: a missing key, null as a real value, an update that does not grow the st
 `set` takes a TTL in milliseconds. A list is fresh for 60 seconds, history for 5 minutes, and chains and protocols for an hour. After that, `get` returns nothing and the caller fetches again. Leaving the TTL off keeps the entry until the size limit drops it, which is what the eviction tests use.
 
 Tested: a value is present at the exact TTL and gone one millisecond later, two keys expire on their own, replacing a value restarts its TTL, an entry with no TTL survives the longest lifetime, and a non positive TTL is refused.
+
+## 6.3 Share in flight loads and keep the last value when a load fails
+
+`load` returns a fresh value without fetching. When several callers miss the same key together, the fetcher runs once and they all wait on it. If the fetch fails and a previous value is still stored, that value is returned, but `get` still returns nothing because the TTL has passed. The error is not stored, so the next `load` tries again.
+
+Tested: two callers share one fetch, a fresh key is not fetched again, an expired key is, a failure with nothing stored throws, and a failed refresh returns the previous value twice without making it fresh.
