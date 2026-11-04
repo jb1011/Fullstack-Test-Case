@@ -48,6 +48,14 @@ I use typescript-eslint's `strictTypeChecked` rules. They read the types, so the
 
 The cost: linting is slower because it runs the type checker.
 
+## My own query names
+
+My API uses its own query names (`chain`, `protocol`, `minTvl`, `page` from 1) instead of Merkl's (`chainId`, `mainProtocolId`, `minimumTvl`, `page` from 0). The Merkl client translates them. Same idea as the DTOs: if Merkl renames a parameter, only the client changes, and the URLs users share keep working.
+
+The status defaults to `LIVE` because past opportunities are rarely what someone is looking for.
+
+The cost: one small mapping function to maintain.
+
 ## CI as one matrix
 
 I run the four checks as a matrix of parallel jobs instead of steps in one job. Each check shows up separately on the PR, and a lint error doesn't stop the tests from running.

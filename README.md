@@ -57,7 +57,9 @@ Browser ──> apps/web (React Router SSR) ──> apps/api (Express) ──> a
 | GET    | `/filters`                   | Chains, protocols and actions for the filter controls        |
 | GET    | `/health`                    | Liveness                                                     |
 
-Filtering always happens on Merkl's side: I pass the filters through (`chainId`, `mainProtocolId`, `action`, `status`, `minimumTvl`, `maximumTvl`, `minimumApr`, `search`, `sort`, `order`, `page`, `items`) instead of downloading every opportunity and filtering locally. The list and the count (`/v4/opportunities/count`) are requested in parallel.
+`GET /opportunities` accepts `chain`, `protocol`, `action`, `status` (comma separated lists), `minTvl`, `maxTvl`, `minApr`, `search`, `sort` (`apr`, `tvl`, `rewards`), `order`, `page` (from 1) and `pageSize` (up to 100). The schema lives in `packages/shared/src/query.ts`.
+
+Filtering always happens on Merkl's side: the Merkl client translates these into Merkl's own parameters (`chainId`, `mainProtocolId`, `minimumTvl`, ...) instead of downloading every opportunity and filtering locally. The list and the count (`/v4/opportunities/count`) are requested in parallel.
 
 Cross cutting concerns: environment config validated with Zod, a validation middleware, a central error handler (Express 5 forwards async errors natively), structured logs with pino, and a `Cache-Control` header on every response.
 
@@ -130,7 +132,7 @@ Every commit ships with unit tests:
 
 1. **Tooling and monorepo scaffold** (done): workspaces, strict TypeScript, ESLint, Prettier, Vitest, single `npm run dev`.
 2. **CI** (done): GitHub Actions running format check, lint, typecheck and tests on every PR.
-3. **Shared query contract**: Zod enums and the opportunities query schema.
+3. **Shared query contract** (done): Zod enums and the opportunities query schema.
 4. **API, Merkl client, DTOs and mappers**: DTO schemas designed from real Merkl responses, tested with MSW.
 5. **API, routes**: a working API with validation and errors, tested with Supertest.
 6. **API, cache**: TTL, stale while revalidate, deduplication, LRU, `Cache-Control`, tested with fake timers.
