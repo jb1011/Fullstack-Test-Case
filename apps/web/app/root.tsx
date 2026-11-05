@@ -31,6 +31,10 @@ export function loader({ context }: LoaderFunctionArgs) {
   return dehydratedLoaderData(requireQueryClient(context));
 }
 
+export function shouldRevalidate() {
+  return false;
+}
+
 export function Layout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">

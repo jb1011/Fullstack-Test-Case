@@ -170,13 +170,13 @@ I mark the clicked segment immediately. If that list is still fresh in the cache
 
 ## The time box is over
 
-The three hours are past, so I am cutting the polish. I will not add motion, prefetch on hover, or keepPreviousData. The list already selects a filter at once and shows skeletons only when that list is not fresh.
+The three hours are past, so I am cutting the polish. I will not add motion or keepPreviousData. The list already selects a filter at once and shows skeletons only when that list is not fresh.
 
-I am keeping the item page, because the exercise asks for one. After it I will add one Playwright test: the first load does not call the API from the browser, and going back is served from the cache.
+I am keeping the item page, because the exercise asks for one.
 
 ## The item page shows recent history in a table
 
-The exercise asks for an item page, so each row links to one. The loader waits for the opportunity and starts the history without waiting, so the hero can paint while those points are still on the way. Hovering a row prefetches that page. I did not draw a chart, because a working page matters more than a half finished one, and the recent APR and TVL already come from the history.
+The exercise asks for an item page, so each row links to one. The loader waits for the opportunity and starts the history without waiting, so the hero can paint while those points are still on the way. Hovering a row prefetches that page.
 
 ## History is a chart
 
@@ -185,3 +185,11 @@ The history was already loading behind the hero, so I drew it with Recharts inst
 ## Hover loads the opportunity
 
 The link prefetch downloads the page code. It does not run the client loader, so the detail and the history were still fetched when the row opened. On hover and on focus I load both into the browser cache. I kept the link prefetch, because the code still has to arrive. A second pass while those entries are fresh does not call the API again.
+
+## The server does not retry
+
+A failed load during the server render was tried three more times, so the page waited about seven seconds before the error showed. On the server I do not retry. The browser still retries a server error, and a missing opportunity is still one request. I didn't keep the three tries on the server, because someone is waiting on that HTML.
+
+## The root route does not reload
+
+The root loader only passes the cache into the first HTML. A later navigation was asking for that loader again, which added a request and an empty snapshot. The root does not revalidate. The page loader still runs, because a new URL has to load its own data.

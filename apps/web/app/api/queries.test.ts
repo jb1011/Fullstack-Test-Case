@@ -1,6 +1,6 @@
 import { opportunitiesQuerySchema } from "@merkl/shared";
 import { QueryClient } from "@tanstack/react-query";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { ApiError, type ApiClient } from "./client";
 import { detail, filters, history, list } from "./fixture";
@@ -53,6 +53,9 @@ describe("opportunity queries", () => {
     expect(retry(0, new ApiError(404, "missing"))).toBe(false);
     expect(retry(0, new ApiError(502, "upstream"))).toBe(true);
     expect(retry(3, new ApiError(502, "upstream"))).toBe(false);
+    vi.stubGlobal("window", undefined);
+    expect(retry(0, new ApiError(502, "upstream"))).toBe(false);
+    vi.unstubAllGlobals();
   });
 
   it("calls the matching client method", async () => {
