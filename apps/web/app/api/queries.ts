@@ -13,8 +13,10 @@ export const FILTERS_STALE_MS = 60 * MINUTE;
 const freshFor = (staleTime: number) => ({
   staleTime,
   gcTime: Math.max(staleTime, 5 * MINUTE),
-  retry: (failureCount: number, error: Error) =>
-    error instanceof ApiError && error.status < 500 ? false : failureCount < 3,
+  retry: (failureCount: number, error: Error) => {
+    if (typeof window === "undefined") return false;
+    return error instanceof ApiError && error.status < 500 ? false : failureCount < 3;
+  },
 });
 
 export function createOpportunityQueries(client: ApiClient) {

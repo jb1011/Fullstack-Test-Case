@@ -184,7 +184,7 @@ Tested: an empty list shows the message and hides the pages, a page past the end
 
 ## 7.8 Restyle the list
 
-The list now looks like the explorer: a light page, Geist, two totals, a filter bar and a table. The design notes used Tailwind, so I put the same colours and sizes into the Chakra theme. Sort sits in the column headers. Maximum TVL and minimum APR still work from the address. Active filters stay in the bar, with no second row of tags, so the list does not jump when the first filter is chosen. A segment such as Lend or Soon selects immediately. The rows become skeletons only when that list is not already fresh in the cache. I left out a rewards total and a TVL change, because those numbers are not in the API. A row does not open an item page yet, and hovering it does not show View. The time box is past, so after the item page I will only add one Playwright test and skip the rest of the polish.
+The list now looks like the explorer: a light page, Geist, two totals, a filter bar and a table. The design notes used Tailwind, so I put the same colours and sizes into the Chakra theme. Sort sits in the column headers. Maximum TVL and minimum APR still work from the address. Active filters stay in the bar, with no second row of tags, so the list does not jump when the first filter is chosen. A segment such as Lend or Soon selects immediately. The rows become skeletons only when that list is not already fresh in the cache. I left out a rewards total and a TVL change, because those numbers are not in the API. A row does not open an item page yet, and hovering it does not show View. The time box is past, so I am skipping the rest of the polish.
 
 Tested: a chain filter still writes the URL and loads that list, reset clears the address, the totals and the next page still work, the empty and error states still show, Lend is pressed while a new list is loading, and a cached list shows without skeletons.
 
@@ -227,3 +227,23 @@ Tested: hover loads one row, focus loads another, and reading either query again
 ## 8.6 Keep one decimal on compact dollars
 
 Node 24 drops a trailing zero in compact currency, so one thousand dollars prints as $1K instead of $1.0K. I set the minimum fraction digits to 1, the same as the maximum, so both Node versions print the same amount. I did not limit the project to Node 22, because anyone on Node 24 would still see the failures.
+
+Tested: one thousand dollars is $1.0K, and the larger amounts keep one decimal.
+
+## 9.1 Do not retry a failed load on the server
+
+A down API was retried three times while the server rendered the page, so the error took about seven seconds to appear. The browser still retries a server error. The server does not. A missing opportunity is still a single request.
+
+Tested: a 502 retries in the browser and stops after three, a 404 does not retry, and the same 502 does not retry when there is no window.
+
+## 9.2 Do not reload the root route
+
+Each navigation asked for the root loader again. That loader only hands the first cache to the HTML, so the extra request carried nothing new. The root now stays as it was. The page loader still runs.
+
+Tested: the root says it should not revalidate.
+
+## 9.3 Make the docs match the code
+
+The README promised a Playwright test, and there is not one. The decisions said I would not prefetch on hover and that I had not drawn a chart. Both of those already exist. I took the promises out.
+
+Tested: the README and the decisions no longer mention a Playwright test, a skipped hover prefetch, or a missing chart.

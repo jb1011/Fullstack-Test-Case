@@ -22,7 +22,7 @@ I chose **opportunities**: it is the core resource of Merkl, and the Merkl API s
 | Web      | React Router v8 (framework mode, SSR), TanStack Query v5, Chakra UI, Recharts     |
 | Shared   | Zod schemas and inferred types, consumed as TypeScript source (no build step)     |
 | Tooling  | strict TypeScript, ESLint (flat config, typescript-eslint, react-hooks), Prettier |
-| Tests    | Vitest, Supertest, MSW, Testing Library, Playwright (end to end, last)            |
+| Tests    | Vitest, Supertest, MSW, Testing Library                                           |
 
 ## Architecture
 
@@ -91,7 +91,7 @@ TanStack Query keeps data per user, so going back to a list or reopening an item
 
 React Router loaders and TanStack Query both want to own the data. I use the pattern TanStack recommends for SSR frameworks:
 
-1. **Server: one `QueryClient` per request**, created in a React Router middleware and passed to loaders through `context`. Sharing one across requests would leak one user's data to another. Loaders `await queryClient.query`, and the cache is dehydrated into the HTML after every loader on that request has finished. A query that is still running is included as a promise, so the browser continues it instead of calling the API again.
+1. **Server: one `QueryClient` per request**, created in a React Router middleware and passed to loaders through `context`. Sharing one across requests would leak one user's data to another. Loaders `await queryClient.query`, and the cache is dehydrated into the HTML after every loader on that request has finished. A failed query is not retried on the server, so a down API shows the error instead of holding the page. A query that is still running is included as a promise, so the browser continues it instead of calling the API again. The root route does not run again on a later navigation.
 2. **Client: one `QueryClient` for the whole session**, with a `HydrationBoundary`. Components only call `useQuery` or `useSuspenseQuery`, exactly like a client rendered app.
 3. **`clientLoader` with `queryClient.query`**: without it, React Router would call the server loader on every client navigation and bypass the TanStack cache. The query factories already set `staleTime`, so a fresh entry is not fetched again.
 4. **Streaming secondary data**: on the item page the opportunity is awaited (critical for first paint and SEO), while the history is prefetched without awaiting and the chart streams in behind a Suspense skeleton. If that request is still running, its promise is what streams, and the browser does not start its own.
@@ -112,7 +112,7 @@ Rejected alternatives:
 
 ### Focus: making it feel instant
 
-The time box is past, so this stays small. A filter selects immediately. Skeletons show only when that list is not already fresh. A row loads the detail and the history into the browser cache on hover and on focus, so opening it makes no request. There is no motion and no keepPreviousData. One Playwright test still checks that the first load does not call the API from the browser and that going back is served from the cache.
+The time box is past, so this stays small. A filter selects immediately. Skeletons show only when that list is not already fresh. A row loads the detail and the history into the browser cache on hover and on focus, so opening it makes no request. There is no motion and no keepPreviousData.
 
 ## Testing
 
@@ -121,7 +121,6 @@ Every commit ships with unit tests:
 - **shared**: schema parsing and normalization.
 - **api**: Merkl client and mappers against MSW, cache with an injected clock, routes with Supertest.
 - **web**: components and URL state with Testing Library.
-- **end to end**: Playwright on the main flows, at the end.
 
 ## Roadmap
 
@@ -133,7 +132,7 @@ Every commit ships with unit tests:
 6. **API, cache** (done): one TTL per entry, deduplication, LRU via `lru-cache`, `Cache-Control`, tested with an injected clock.
 7. **Web, SSR foundation and list page** (done): QueryClient middleware, hydration, filters in the URL.
 8. **Web, item page** (done): the detail is awaited, history is prefetched, each row links to the page, and a missing id is a 404. The page is laid out like the explorer detail, with an APR and TVL chart.
-9. **One Playwright test**: the first load does not call the API from the browser, and going back is served from the cache. Motion and keepPreviousData are cut.
+9. **Small corrections** (done): the docs match the code. The server does not retry a failed load, and the root route does not reload on navigation. Motion and keepPreviousData stay cut.
 
 ## Documentation
 
